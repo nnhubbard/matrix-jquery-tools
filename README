@@ -1,1 +1,14 @@
-Just a test.
+jquery.matrix.js
+Copyright 2008 Nicholas Hubbard
+
+This file provides a description for each jquery.matrix plugin.
+NOTE: Most plugins require some sort of configuration within MySource Matrix in order to talk to the server.  Please take a look at the tutorials at www.zedsaid.com/projects
+
+matrixDelete:
+This plugin will allow you to delete single or multiple assets.  The plugin posts to a trigger using ajax.
+
+matrixClone:
+This plugin will clone an asset a user specified number of times.   The plugin posts to a trigger using ajax.
+
+matrixStatus:
+This plugin will change the status of an asset.  The plugin posts to a trigger using ajax.

@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.9 (OCT-24-2008)
+ * version: 0.9.1 (OCT-24-2008)
  * Copyright (C) 2008 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger configuration in MySource Matrix
@@ -125,4 +125,39 @@ function page_on_load() {
     });
 
   };
+  /*
+	 *This Plugin is VERY experimental and hardly even functional.  
+	 *It is used to edit text inline and POST back using ajax.
+	 *Current page URL, %asset_url% must be passed to function
+	 *Work in progress!!
+	 */
+  $.fn.matrixEdit = function(options) {
+    var defaults = {
+      currentPage: ''
+    };
+
+    var options = $.extend(defaults, options);
+
+    return this.each(function() {
+
+      var obj = $(this);
+
+      obj.click(function() {
+        obj.attr('contentEditable', 'true').css('background-color', '#ccc');
+      });
+      obj.blur(function() {
+        obj.attr('contentEditable', 'false').css('background-color', '#fff');
+      });
+      $('#save').click(function() {
+        var saveContent = obj.html();
+        var currentHref = defaults.currentPage;
+        $.ajax({
+          type: 'GET',
+          url: currentHref + '?action=change&details=' + saveContent
+        });
+      });
+
+    });
+  };
+  //End  
 })(jQuery);

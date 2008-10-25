@@ -12,7 +12,7 @@
  *
  */
 
-//Overwrite function so that we can open frames
+//Overwrite limbo_outputter.inc function so that we can open frames
 function page_on_load() {
   SQ_DOCUMENT_LOADED = true;
 };
@@ -35,10 +35,12 @@ function page_on_load() {
       var obj = $(this);
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
-      if (defaults.multiple == false) {
-        //Display nothing
-      } else {
-        obj.after('<input id="' + itemId + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />').addClass(defaults.checkboxClass);
+      switch (defaults.multiple) {
+      case true:
+        {
+          obj.after('<input id="' + itemId + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />').addClass(defaults.checkboxClass);
+          break;
+        }
       }
       obj.click(function() {
         var question = confirm('Are you sure you want to delete asset #' + itemId);

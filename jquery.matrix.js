@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.9.1 (OCT-24-2008)
+ * version: 0.9.1 (OCT-25-2008)
  * Copyright (C) 2008 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger configuration in MySource Matrix
@@ -19,6 +19,30 @@ function page_on_load() {
 
 (function($) {
   /*
+	 *This Plugin is used to stay within the same page while opening Simple Edit pages.  
+	 *It creates and iframe, then opens URLs within the iframe.
+	 */
+  $.fn.matrixFrame = function(options) {
+    var defaults = {
+      urlSuffix: '?test'
+    };
+
+    $('body').append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
+
+    var options = $.extend(defaults, options);
+
+    return this.each(function() {
+
+      var obj = $(this);
+      var itemId = obj.attr('id');
+      var itemHref = obj.attr('href');
+
+      obj.attr('target', 'assetEditFrame');
+      obj.attr('href', itemHref + defaults.urlSuffix);
+    });
+  };
+
+  /*
 	 *This Plugin will delete single or multiple assets
 	 */
   $.fn.matrixDelete = function(options) {
@@ -30,17 +54,18 @@ function page_on_load() {
 
     var options = $.extend(defaults, options);
 
+    if (defaults.multiple == true) {
+      $('body').append('<p><input id="massDelete" type="button" value="Delete Multiple" />');
+    }
+
     return this.each(function() {
 
       var obj = $(this);
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
-      switch (defaults.multiple) {
-      case true:
-        {
-          obj.after('<input id="' + itemId + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />').addClass(defaults.checkboxClass);
-          break;
-        }
+      obj.wrap('<span class="deleteHolder"></span>');
+      if (defaults.multiple == true) {
+        obj.after('<input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
       }
       obj.click(function() {
         var question = confirm('Are you sure you want to delete asset #' + itemId);
@@ -49,13 +74,29 @@ function page_on_load() {
             type: 'POST',
             url: itemHref + '?' + defaults.urlMatch
           });
-          obj.hide();
-          obj.next('input').hide();
+          obj.parent('.deleteHolder').hide();
+          obj.parent().parent().hide();
         }
         return false;
       });
+      $('#massDelete').unbind('click');
+      $('#massDelete').click(function() {
+        var answerDelete = confirm('Are you sure you want to delete multiple assets?');
+        if (answerDelete) {
+          $(':checkbox:checked').each(function() {
+            $.ajax({
+              type: 'POST',
+              url: itemHref + '?' + defaults.urlMatch
+            });
+          });
+          $('input:checked').parent('.deleteHolder').hide();
+          $('input:checked').parent().parent().hide();
+          $("#assetEditFrame").contents().html("");
+        }
+      });
     });
   };
+
   /*
 	 *This Plugin will clone the current asset and link to the same parent
 	 */
@@ -74,8 +115,8 @@ function page_on_load() {
       obj.click(function() {
         var itemId = obj.attr('id');
         var itemHref = obj.attr('href');
-        $("#duplicateConfirm").unbind('click');
-        $("#duplicateConfirm").click(function() {
+        $('#duplicateConfirm').unbind('click');
+        $('#duplicateConfirm').click(function() {
           var dulicateCheck = parseInt($('#duplicateInput').val());
           if (dulicateCheck <= defaults.limit) {
             var cloneAnswer = confirm('Are you sure you want duplicate asset #' + itemId + ' ' + dulicateCheck + ' times?');
@@ -97,6 +138,7 @@ function page_on_load() {
       }); //end obj.click
     });
   };
+
   /*
 	 *This Plugin will change the status of an asset
 	 */
@@ -127,6 +169,7 @@ function page_on_load() {
     });
 
   };
+
   /*
 	 *This Plugin is VERY experimental and hardly even functional.  
 	 *It is used to edit text inline and POST back using ajax.

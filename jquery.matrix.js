@@ -49,7 +49,7 @@ function page_on_load() {
     var defaults = {
       multiple: false,
       checkboxClass: 'delete',
-      urlMatch: 'action=delete'
+      urlSuffix: 'action=delete'
     };
 
     var options = $.extend(defaults, options);
@@ -72,7 +72,7 @@ function page_on_load() {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + '?' + defaults.urlMatch
+            url: itemHref + '?' + defaults.urlSuffix
           });
           obj.parent('.deleteHolder').hide();
           obj.parent().parent().hide();
@@ -86,7 +86,7 @@ function page_on_load() {
           $(':checkbox:checked').each(function() {
             $.ajax({
               type: 'POST',
-              url: itemHref + '?' + defaults.urlMatch
+              url: itemHref + '?' + defaults.urlSuffix
             });
           });
           $('input:checked').parent('.deleteHolder').hide();

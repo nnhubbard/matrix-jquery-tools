@@ -24,7 +24,7 @@ function page_on_load() {
 	 */
   $.fn.matrixFrame = function(options) {
     var defaults = {
-      urlSuffix: '?test'
+      urlSuffix: ''
     };
 
     $('body').append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');

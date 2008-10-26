@@ -4,6 +4,9 @@ Copyright 2008 Nicholas Hubbard
 This file provides a description for each jquery.matrix plugin.
 NOTE: Most plugins require some sort of configuration within MySource Matrix in order to talk to the server.  Please take a look at the tutorials at www.zedsaid.com/projects
 
+matrixFrame:
+This plugin works in simple edit and lets you open assets in an iframe, allowing for quick and easy editing of assets.
+
 matrixDelete:
 This plugin will allow you to delete single or multiple assets.  The plugin posts to a trigger using ajax.
 
@@ -12,3 +15,6 @@ This plugin will clone an asset a user specified number of times.   The plugin p
 
 matrixStatus:
 This plugin will change the status of an asset.  The plugin posts to a trigger using ajax.
+
+matrixEdit:
+Very experimental plugin which supports inline editing of content just by clicking on that content.  Trigger must be configured to save page.

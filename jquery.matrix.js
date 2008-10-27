@@ -24,10 +24,11 @@ function page_on_load() {
 	 */
   $.fn.matrixFrame = function(options) {
     var defaults = {
-      urlSuffix: ''
+      urlSuffix: '?test',
+	  iframe: 'body'
     };
 
-    $('body').append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
+    $(defaults.iframe).append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
 
     var options = $.extend(defaults, options);
 
@@ -54,6 +55,10 @@ function page_on_load() {
 
     var options = $.extend(defaults, options);
 
+    if (defaults.multiple == true) {
+      $('body').append('<p><input id="massDelete" type="button" value="Delete Multiple" />');
+    }
+
     return this.each(function() {
 
       var obj = $(this);
@@ -61,7 +66,7 @@ function page_on_load() {
       var itemHref = obj.attr('href');
       obj.wrap('<span class="deleteHolder"></span>');
       if (defaults.multiple == true) {
-        obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+        obj.after('<input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
       }
       obj.click(function() {
         var question = confirm('Are you sure you want to delete asset #' + itemId);

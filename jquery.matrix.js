@@ -54,10 +54,6 @@ function page_on_load() {
 
     var options = $.extend(defaults, options);
 
-    if (defaults.multiple == true) {
-      $('body').append('<p><input id="massDelete" type="button" value="Delete Multiple" />');
-    }
-
     return this.each(function() {
 
       var obj = $(this);

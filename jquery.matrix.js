@@ -61,7 +61,7 @@ function page_on_load() {
       var itemHref = obj.attr('href');
       obj.wrap('<span class="deleteHolder"></span>');
       if (defaults.multiple == true) {
-        obj.after('<input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+        obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
       }
       obj.click(function() {
         var question = confirm('Are you sure you want to delete asset #' + itemId);

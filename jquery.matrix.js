@@ -24,13 +24,13 @@ function page_on_load() {
 	 */
   $.fn.matrixFrame = function(options) {
     var defaults = {
-      urlSuffix: '?test',
+      urlSuffix: '',
 	  iframe: 'body'
     };
+	
+    var options = $.extend(defaults, options);
 
     $(defaults.iframe).append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
-
-    var options = $.extend(defaults, options);
 
     return this.each(function() {
 

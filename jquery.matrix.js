@@ -25,12 +25,12 @@ function page_on_load() {
   $.fn.matrixFrame = function(options) {
     var defaults = {
       urlSuffix: '',
-	  iframe: 'body'
+	  target: 'body'
     };
 	
     var options = $.extend(defaults, options);
 
-    $(defaults.iframe).append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
+    $(defaults.target).append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
 
     return this.each(function() {
 
@@ -50,13 +50,14 @@ function page_on_load() {
     var defaults = {
       multiple: false,
       checkboxClass: 'delete',
-      urlSuffix: 'action=delete'
+      urlSuffix: 'action=delete',
+	  target: 'body'
     };
 
     var options = $.extend(defaults, options);
 
     if (defaults.multiple == true) {
-      $('body').append('<p><input id="massDelete" type="button" value="Delete Multiple" />');
+      $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
     }
 
     return this.each(function() {
@@ -66,7 +67,7 @@ function page_on_load() {
       var itemHref = obj.attr('href');
       obj.wrap('<span class="deleteHolder"></span>');
       if (defaults.multiple == true) {
-        obj.after('<input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+        obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
       }
       obj.click(function() {
         var question = confirm('Are you sure you want to delete asset #' + itemId);

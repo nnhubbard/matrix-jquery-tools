@@ -105,6 +105,7 @@ function page_on_load() {
   $.fn.matrixClone = function(options) {
     var defaults = {
       limit: 10,
+	  urlSuffix: 'action=duplicate',
 	  target: 'body'
     };
 
@@ -128,7 +129,7 @@ function page_on_load() {
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
                   type: "POST",
-                  url: itemHref + "?action=duplicate"
+                  url: itemHref + '?' + defaults.urlSuffix
                 });
               } // for
             }

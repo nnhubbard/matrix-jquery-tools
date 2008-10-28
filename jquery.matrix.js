@@ -104,12 +104,13 @@ function page_on_load() {
 	 */
   $.fn.matrixClone = function(options) {
     var defaults = {
-      limit: 10
+      limit: 10,
+	  target: 'body'
     };
 
     var options = $.extend(defaults, options);
 
-    $('body').append('<p><input id="duplicateInput" type="text" value="" /> <input id="duplicateConfirm" type="button" value="Duplicate" />');
+    $(defaults.target).append('<input id="duplicateInput" type="text" value="" /> <input id="duplicateConfirm" type="button" value="Duplicate" />');
 
     return this.each(function() {
       var obj = $(this);

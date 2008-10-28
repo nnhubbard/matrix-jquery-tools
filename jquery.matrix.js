@@ -25,9 +25,9 @@ function page_on_load() {
   $.fn.matrixFrame = function(options) {
     var defaults = {
       urlSuffix: '',
-	  target: 'body'
+      target: 'body'
     };
-	
+
     var options = $.extend(defaults, options);
 
     $(defaults.target).append('<iframe name="assetEditFrame" id="assetEditFrame" scrolling="no" frameborder="0"></iframe>');
@@ -37,7 +37,6 @@ function page_on_load() {
       var obj = $(this);
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
-
       obj.attr('target', 'assetEditFrame');
       obj.attr('href', itemHref + defaults.urlSuffix);
     });
@@ -51,7 +50,7 @@ function page_on_load() {
       multiple: false,
       checkboxClass: 'delete',
       urlSuffix: 'action=delete',
-	  target: 'body'
+      target: 'body'
     };
 
     var options = $.extend(defaults, options);
@@ -105,8 +104,8 @@ function page_on_load() {
   $.fn.matrixClone = function(options) {
     var defaults = {
       limit: 10,
-	  urlSuffix: 'action=duplicate',
-	  target: 'body'
+      urlSuffix: 'action=duplicate',
+      target: 'body'
     };
 
     var options = $.extend(defaults, options);
@@ -114,8 +113,8 @@ function page_on_load() {
     $(defaults.target).append('<input id="duplicateInput" type="text" value="" /> <input id="duplicateConfirm" type="button" value="Duplicate" />');
 
     return this.each(function() {
-      var obj = $(this);
 
+      var obj = $(this);
       obj.click(function() {
         var itemId = obj.attr('id');
         var itemHref = obj.attr('href');
@@ -156,7 +155,6 @@ function page_on_load() {
     return this.each(function() {
 
       var obj = $(this);
-
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
       obj.click(function() {
@@ -169,9 +167,7 @@ function page_on_load() {
         }
         return false;
       });
-
     });
-
   };
 
   /*
@@ -190,7 +186,6 @@ function page_on_load() {
     return this.each(function() {
 
       var obj = $(this);
-
       obj.click(function() {
         obj.attr('contentEditable', 'true').css('background-color', '#ccc');
       });
@@ -205,7 +200,6 @@ function page_on_load() {
           url: currentHref + '?action=change&details=' + saveContent
         });
       });
-
     });
   };
   //End  

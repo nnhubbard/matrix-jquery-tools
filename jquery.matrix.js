@@ -105,7 +105,7 @@ $.fn.matrixForm = function(options) {
     var defaults = {
       multiple: false,
       checkboxClass: 'delete',
-      urlSuffix: 'action=delete',
+      urlSuffix: '?action=delete',
       target: 'body'
     };
 
@@ -129,7 +129,7 @@ $.fn.matrixForm = function(options) {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + '?' + defaults.urlSuffix
+            url: itemHref + defaults.urlSuffix
           });
           obj.parent('.deleteHolder').remove();
           obj.parent().parent().remove();
@@ -143,7 +143,7 @@ $.fn.matrixForm = function(options) {
           $('input:checked').each(function() {
             $.ajax({
               type: 'POST',
-              url: this.value + '?' + defaults.urlSuffix
+              url: this.value + defaults.urlSuffix
             });
           });
           $('input:checked').parent('.deleteHolder').remove();
@@ -160,7 +160,7 @@ $.fn.matrixForm = function(options) {
   $.fn.matrixClone = function(options) {
     var defaults = {
       limit: 10,
-      urlSuffix: 'action=duplicate',
+      urlSuffix: '?action=duplicate',
       target: 'body'
     };
 
@@ -183,7 +183,7 @@ $.fn.matrixForm = function(options) {
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
                   type: 'POST',
-                  url: itemHref + '?' + defaults.urlSuffix
+                  url: itemHref + defaults.urlSuffix
                 });
               } // for
             }
@@ -202,7 +202,7 @@ $.fn.matrixForm = function(options) {
 	 */
   $.fn.matrixStatus = function(options) {
     var defaults = {
-      status: 'live'
+      status: '?action=live'
     };
 
     var options = $.extend(defaults, options);
@@ -213,11 +213,11 @@ $.fn.matrixForm = function(options) {
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
       obj.click(function() {
-        var question = confirm('Are you sure you want set the status of asset #' + itemId + ' to ' + defaults.status + '?');
+        var question = confirm('Are you sure you want change the status of asset #' + itemId + ' ?');
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + '?action=' + defaults.status
+            url: itemHref + defaults.status
           });
         }
         return false;

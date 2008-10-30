@@ -1,9 +1,9 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.9.1 (OCT-25-2008)
+ * version: 0.9.2 (OCT-29-2008)
  * Copyright (C) 2008 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
- * @requires Trigger configuration in MySource Matrix
+ * @requires Trigger or Asset configuration in MySource Matrix
  *
  * Examples and documentation at: http://www.zedsaid.com/projects/simple-edit-tools
  * Dual licensed under the MIT and GPL licenses:
@@ -18,6 +18,62 @@ function page_on_load() {
 };
 
 (function($) {
+  /*
+	 *This Plugin will allow you to submit an asset builder using ajax, including wysiwyg editor fields.
+	 */
+$.fn.matrixForm = function(options) {
+  var defaults = {
+    findCreated: '',
+    findTarget: '',
+    loading: ''
+  };
+
+  var options = $.extend(defaults, options);
+
+  return this.each(function() {
+
+    var obj = $(this);
+    var itemId = obj.attr('id');
+    var itemHref = obj.attr('action');
+    obj.removeAttr('onsubmit');
+    $('#sq_commit_button').removeAttr('onclick');
+
+    $('#sq_commit_button').click(function() {
+      $('textarea[name^="news_item"], textarea[name^="calendar_event"]').each(function() {
+        var textId = $(this).attr('id');
+        $(this).val(eval('editor_' + textId + '.getHTML();'));
+      });
+      var serializeForm = obj.serialize();
+      $.ajax({
+        type: 'POST',
+        url: itemHref,
+        data: serializeForm,
+        beforeSend: function() {
+          if (defaults.findTarget != '') {
+            $(defaults.findTarget).show();
+          }
+          if (defaults.loading != '') {
+            $('#sq_commit_button').after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
+          }
+        },
+        success: function(html) {
+          $('#loadingImage').remove();
+          if (defaults.findCreated != '' && defaults.findTarget != '') {
+            $(defaults.findTarget).html($(html).find(defaults.findCreated));
+            setTimeout(function() {
+              $(defaults.findTarget).fadeOut('slow',
+              function() {
+                $(this).html('')
+              });
+            },
+            5000);
+          }
+        }
+      });
+    });
+  });
+};
+  
   /*
 	 *This Plugin is used to stay within the same page while opening Simple Edit pages.  
 	 *It creates and iframe, then opens URLs within the iframe.

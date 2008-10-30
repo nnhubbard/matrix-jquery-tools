@@ -129,7 +129,8 @@ $.fn.matrixForm = function(options) {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + '?' + defaults.urlSuffix
+            url: itemHref,
+			data: '?' + defaults.urlSuffix
           });
           obj.parent('.deleteHolder').hide();
           obj.parent().parent().hide();
@@ -143,7 +144,8 @@ $.fn.matrixForm = function(options) {
           $(':checkbox:checked').each(function() {
             $.ajax({
               type: 'POST',
-              url: itemHref + '?' + defaults.urlSuffix
+              url: itemHref,
+			  data: '?' + defaults.urlSuffix
             });
           });
           $('input:checked').parent('.deleteHolder').hide();
@@ -180,11 +182,11 @@ $.fn.matrixForm = function(options) {
           if (dulicateCheck <= defaults.limit) {
             var cloneAnswer = confirm('Are you sure you want duplicate asset #' + itemId + ' ' + dulicateCheck + ' times?');
             if (cloneAnswer) {
-              //Loop through number value, posting to the trigger each time
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
-                  type: "POST",
-                  url: itemHref + '?' + defaults.urlSuffix
+                  type: 'POST',
+                  url: itemHref,
+				  data: '?' + defaults.urlSuffix
                 });
               } // for
             }
@@ -218,14 +220,15 @@ $.fn.matrixForm = function(options) {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + '?action=' + defaults.status
+            url: itemHref,
+			data: '?action=' + defaults.status
           });
         }
         return false;
       });
     });
   };
-
+  
   /*
 	 *This Plugin is VERY experimental and hardly even functional.  
 	 *It is used to edit text inline and POST back using ajax.
@@ -234,7 +237,7 @@ $.fn.matrixForm = function(options) {
 	 */
   $.fn.matrixEdit = function(options) {
     var defaults = {
-      currentPage: ''
+      //None yet
     };
 
     var options = $.extend(defaults, options);
@@ -252,8 +255,9 @@ $.fn.matrixForm = function(options) {
         var saveContent = obj.html();
         var currentHref = defaults.currentPage;
         $.ajax({
-          type: 'GET',
-          url: currentHref + '?action=change&details=' + saveContent
+          type: 'POST',
+          url: location.href,
+		  data: '?action=change&details=' + saveContent
         });
       });
     });

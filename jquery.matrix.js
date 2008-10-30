@@ -129,11 +129,10 @@ $.fn.matrixForm = function(options) {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref,
-			data: '?' + defaults.urlSuffix
+            url: itemHref + '?' + defaults.urlSuffix
           });
-          obj.parent('.deleteHolder').hide();
-          obj.parent().parent().hide();
+          obj.parent('.deleteHolder').remove();
+          obj.parent().parent().remove();
         }
         return false;
       });
@@ -141,16 +140,15 @@ $.fn.matrixForm = function(options) {
       $('#massDelete').click(function() {
         var answerDelete = confirm('Are you sure you want to delete multiple assets?');
         if (answerDelete) {
-          $(':checkbox:checked').each(function() {
+          $('input:checked').each(function() {
             $.ajax({
               type: 'POST',
-              url: itemHref,
-			  data: '?' + defaults.urlSuffix
+              url: this.value + '?' + defaults.urlSuffix
             });
           });
-          $('input:checked').parent('.deleteHolder').hide();
-          $('input:checked').parent().parent().hide();
-          $("#assetEditFrame").contents().html("");
+          $('input:checked').parent('.deleteHolder').remove();
+          $('input:checked').parent().parent().remove();
+          //$("#assetEditFrame").contents().html("");
         }
       });
     });
@@ -185,8 +183,7 @@ $.fn.matrixForm = function(options) {
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
                   type: 'POST',
-                  url: itemHref,
-				  data: '?' + defaults.urlSuffix
+                  url: itemHref + '?' + defaults.urlSuffix
                 });
               } // for
             }
@@ -220,8 +217,7 @@ $.fn.matrixForm = function(options) {
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref,
-			data: '?action=' + defaults.status
+            url: itemHref + '?action=' + defaults.status
           });
         }
         return false;

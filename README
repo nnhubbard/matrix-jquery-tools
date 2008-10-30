@@ -4,6 +4,9 @@ Copyright 2008 Nicholas Hubbard
 This file provides a description for each jquery.matrix plugin.
 NOTE: Most plugins require some sort of configuration within MySource Matrix in order to talk to the server.  Please take a look at the tutorials at www.zedsaid.com/projects
 
+matrixForm:
+This plugin will allow asset builders to be submitted using ajax, making creation of assets quick and easy.
+
 matrixFrame:
 This plugin works in simple edit and lets you open assets in an iframe, allowing for quick and easy editing of assets.
 

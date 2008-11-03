@@ -111,58 +111,64 @@ $.fn.matrixForm = function(options) {
   /*
 	 *This Plugin will delete single or multiple assets
 	 */
-  $.fn.matrixDelete = function(options) {
-    var defaults = {
-      multiple: false,
-      checkboxClass: 'delete',
-      urlSuffix: '?action=delete',
-      target: 'body'
-    };
+ $.fn.matrixDelete = function(options) {
+  var defaults = {
+    multiple: false,
+    checkboxClass: 'delete',
+    urlSuffix: '?action=delete',
+    target: 'body',
+    simpleEdit: false
+  };
 
-    var options = $.extend(defaults, options);
+  var options = $.extend(defaults, options);
 
-    if (defaults.multiple == true) {
-      $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
-    }
+  if (defaults.multiple == true) {
+    $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
+  }
 
-    return this.each(function() {
+  return this.each(function() {
 
-      var obj = $(this);
-      var itemId = obj.attr('id');
+    var obj = $(this);
+    var itemId = obj.attr('id');
+    if (defaults.simpleEdit == false) {
       var itemHref = obj.attr('href');
-      obj.wrap('<span class="deleteHolder"></span>');
-      if (defaults.multiple == true) {
-        obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+    } else {
+      var itemHref = obj.attr('href').replace('/_edit', '');
+      obj.attr('href', itemHref);
+    }
+    obj.wrap('<span class="deleteHolder"></span>');
+    if (defaults.multiple == true) {
+      obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+    }
+    obj.click(function() {
+      var question = confirm('Are you sure you want to delete asset #' + itemId);
+      if (question) {
+        $.ajax({
+          type: 'POST',
+          url: itemHref + defaults.urlSuffix
+        });
+        obj.parent('.deleteHolder').remove();
+        obj.parent().parent().remove();
       }
-      obj.click(function() {
-        var question = confirm('Are you sure you want to delete asset #' + itemId);
-        if (question) {
+      return false;
+    });
+    $('#massDelete').unbind('click');
+    $('#massDelete').click(function() {
+      var answerDelete = confirm('Are you sure you want to delete multiple assets?');
+      if (answerDelete) {
+        $('input:checked').each(function() {
           $.ajax({
             type: 'POST',
-            url: itemHref + defaults.urlSuffix
+            url: this.value + defaults.urlSuffix
           });
-          obj.parent('.deleteHolder').remove();
-          obj.parent().parent().remove();
-        }
-        return false;
-      });
-      $('#massDelete').unbind('click');
-      $('#massDelete').click(function() {
-        var answerDelete = confirm('Are you sure you want to delete multiple assets?');
-        if (answerDelete) {
-          $('input:checked').each(function() {
-            $.ajax({
-              type: 'POST',
-              url: this.value + defaults.urlSuffix
-            });
-          });
-          $('input:checked').parent('.deleteHolder').remove();
-          $('input:checked').parent().parent().remove();
-          //$("#assetEditFrame").contents().html("");
-        }
-      });
+        });
+        $('input:checked').parent('.deleteHolder').remove();
+        $('input:checked').parent().parent().remove();
+        //$("#assetEditFrame").contents().html("");
+      }
     });
-  };
+  });
+};
 
   /*
 	 *This Plugin will clone the current asset and link to the same parent

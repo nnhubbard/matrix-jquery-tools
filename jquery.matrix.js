@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.9.2 (OCT-29-2008)
+ * version: 0.9.2 (NOV-03-2008)
  * Copyright (C) 2008 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
@@ -36,41 +36,51 @@ $.fn.matrixForm = function(options) {
     var itemId = obj.attr('id');
     var itemHref = obj.attr('action');
     obj.removeAttr('onsubmit');
-    $('#sq_commit_button').removeAttr('onclick');
+    if ($('input:file').length == 0) {
+      $('#sq_commit_button').removeAttr('onclick');
 
-    $('#sq_commit_button').click(function() {
-      $('textarea[name^="news_item"], textarea[name^="calendar_event"]').each(function() {
-        var textId = $(this).attr('id');
-        $(this).val(eval('editor_' + textId + '.getHTML();'));
+      $('#sq_commit_button').click(function() {
+        $('textarea[name^="news_item"], textarea[name^="calendar_event"]').each(function() {
+          var textId = $(this).attr('id');
+          $(this).val(eval('editor_' + textId + '.getHTML();'));
+        });
+        var serializeForm = obj.serialize();
+        $.ajax({
+          type: 'POST',
+          url: itemHref,
+          data: serializeForm,
+          beforeSend: function() {
+            if (defaults.findTarget != '') {
+              $(defaults.findTarget).show();
+            }
+            if (defaults.loading != '') {
+              $('#sq_commit_button').after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
+            }
+          },
+          success: function(html) {
+            $('#loadingImage').remove();
+            if (defaults.findCreated != '' && defaults.findTarget != '') {
+              $(defaults.findTarget).html($(html).find(defaults.findCreated));
+              setTimeout(function() {
+                $(defaults.findTarget).fadeOut('slow',
+                function() {
+                  $(this).html('')
+                });
+              },
+              5000);
+            }
+          }
+        }); //End Ajax
+      }); //End Click
+    } else {
+      //Use iframe if form is uploading a file
+      $('body').append('<iframe id="assetBuilderFrame" name="assetBuilderFrame" style="position:absolute; top:-1000px; left:-1000px;"></iframe>');
+      obj.attr('target', 'assetBuilderFrame');
+      $('#sq_commit_button').click(function() {
+        obj.submit();
+        //obj.html(iframeContent);
       });
-      var serializeForm = obj.serialize();
-      $.ajax({
-        type: 'POST',
-        url: itemHref,
-        data: serializeForm,
-        beforeSend: function() {
-          if (defaults.findTarget != '') {
-            $(defaults.findTarget).show();
-          }
-          if (defaults.loading != '') {
-            $('#sq_commit_button').after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
-          }
-        },
-        success: function(html) {
-          $('#loadingImage').remove();
-          if (defaults.findCreated != '' && defaults.findTarget != '') {
-            $(defaults.findTarget).html($(html).find(defaults.findCreated));
-            setTimeout(function() {
-              $(defaults.findTarget).fadeOut('slow',
-              function() {
-                $(this).html('')
-              });
-            },
-            5000);
-          }
-        }
-      });
-    });
+    } //End Else
   });
 };
   

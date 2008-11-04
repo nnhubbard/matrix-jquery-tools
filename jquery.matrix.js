@@ -75,7 +75,8 @@ $.fn.matrixForm = function(options) {
     } else {
       //Use iframe if form is uploading a file
       $('body').append('<iframe id="assetBuilderFrame" name="assetBuilderFrame" style="position:absolute; top:-1000px; left:-1000px;"></iframe>');
-      obj.attr('target', 'assetBuilderFrame');
+      $('#assetBuilderFrame').attr('src', 'javascript:false;document.write("")');
+	  obj.attr('target', 'assetBuilderFrame');
       $('#sq_commit_button').click(function() {
         obj.submit();
         //obj.html(iframeContent);

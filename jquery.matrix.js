@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.9.2 (NOV-03-2008)
+ * version: 0.2 (NOV-09-2008)
  * Copyright (C) 2008 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
@@ -85,6 +85,37 @@ $.fn.matrixForm = function(options) {
   });
 };
   
+  /*
+	 *This Plugin filters a list of matched elements.  Great when used with Asset Listings.
+	 *Filter searching is similar to iTunes search.
+	 *Thanks to Matt Ryall for the idea.
+	 */
+$.fn.matrixFilter = function(options) {
+    var defaults = {
+        target: 'body'
+    };
+
+    var options = $.extend(defaults, options);
+
+    $(defaults.target).append('<input id="filter" type="text" />');
+
+    return this.each(function() {
+
+        var obj = $(this);
+
+        $('#filter').keyup(function() {
+            var filter = $('#filter').val();
+            obj.each(function() {
+                if ($(this).text().search(new RegExp(filter, 'i')) < 0) {
+                    $(this).hide();
+                } else {
+                    $(this).show();
+                };
+            });
+        });//End keyup
+    });
+};
+
   /*
 	 *This Plugin is used to stay within the same page while opening Simple Edit pages.  
 	 *It creates and iframe, then opens URLs within the iframe.

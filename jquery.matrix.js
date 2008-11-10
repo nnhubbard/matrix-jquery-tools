@@ -91,29 +91,35 @@ $.fn.matrixForm = function(options) {
 	 *Thanks to Matt Ryall for the idea.
 	 */
 $.fn.matrixFilter = function(options) {
-    var defaults = {
-        target: 'body'
-    };
+  var defaults = {
+    target: 'body',
+    count: true
+  };
 
-    var options = $.extend(defaults, options);
+  var options = $.extend(defaults, options);
 
-    $(defaults.target).append('<input id="filter" type="text" />');
+  $(defaults.target).append('<input id="filter" type="text" /> <span id="count"></span>');
 
-    return this.each(function() {
-
-        var obj = $(this);
-
-        $('#filter').keyup(function() {
-            var filter = $('#filter').val();
-            obj.each(function() {
-                if ($(this).text().search(new RegExp(filter, 'i')) < 0) {
-                    $(this).hide();
-                } else {
-                    $(this).show();
-                };
-            });
-        });//End keyup
+  var obj = $(this);
+  total = obj.length;
+  if (defaults.count == true) {
+    $('#count').text(total + ' of ' + total);
+  }
+  $('#filter').keyup(function() {
+    var filter = $('#filter').val(),
+    count = 0;
+    obj.each(function() {
+      if ($(this).text().search(new RegExp(filter, 'i')) < 0) {
+        $(this).hide();
+      } else {
+        $(this).show();
+        count++;
+      };
     });
+    if (defaults.count == true) {
+      $('#count').text(count + ' of ' + total);
+    }
+  }); //End keyup
 };
 
   /*

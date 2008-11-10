@@ -7,6 +7,9 @@ NOTE: Most plugins require some sort of configuration within MySource Matrix in 
 matrixForm:
 This plugin will allow asset builders to be submitted using ajax, making creation of assets quick and easy.
 
+matrixFilter:
+This plugin lets you filter a list of assets in real-time, giving you a iTunes like search interface.
+
 matrixFrame:
 This plugin works in simple edit and lets you open assets in an iframe, allowing for quick and easy editing of assets.
 

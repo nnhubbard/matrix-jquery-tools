@@ -36,7 +36,7 @@ $.fn.matrixForm = function(options) {
     var itemId = obj.attr('id');
     var itemHref = obj.attr('action');
     obj.removeAttr('onsubmit');
-    if ($('input:file').length == 0) {
+    if ($('input:file').length === 0) {
       $('#sq_commit_button').removeAttr('onclick');
 
       $('#sq_commit_button').click(function() {
@@ -50,7 +50,7 @@ $.fn.matrixForm = function(options) {
           url: itemHref,
           data: serializeForm,
           beforeSend: function() {
-            if (defaults.findTarget != '') {
+            if (defaults.findTarget !== '') {
               $(defaults.findTarget).show();
             }
             if (defaults.loading != '') {
@@ -59,12 +59,12 @@ $.fn.matrixForm = function(options) {
           },
           success: function(html) {
             $('#loadingImage').remove();
-            if (defaults.findCreated != '' && defaults.findTarget != '') {
+            if (defaults.findCreated !== '' && defaults.findTarget != '') {
               $(defaults.findTarget).html($(html).find(defaults.findCreated));
               setTimeout(function() {
                 $(defaults.findTarget).fadeOut('slow',
                 function() {
-                  $(this).html('')
+                  $(this).html('');
                 });
               },
               5000);
@@ -102,7 +102,7 @@ $.fn.matrixFilter = function(options) {
 
   var obj = $(this);
   total = obj.length;
-  if (defaults.count == true) {
+  if (defaults.count === true) {
     $('#count').text(total + ' of ' + total);
   }
   $('#filter').keyup(function() {
@@ -116,7 +116,7 @@ $.fn.matrixFilter = function(options) {
         count++;
       };
     });
-    if (defaults.count == true) {
+    if (defaults.count === true) {
       $('#count').text(count + ' of ' + total);
     }
   }); //End keyup
@@ -160,7 +160,7 @@ $.fn.matrixFilter = function(options) {
 
   var options = $.extend(defaults, options);
 
-  if (defaults.multiple == true) {
+  if (defaults.multiple === true) {
     $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
   }
 
@@ -168,14 +168,14 @@ $.fn.matrixFilter = function(options) {
 
     var obj = $(this);
     var itemId = obj.attr('id');
-    if (defaults.simpleEdit == false) {
+    if (defaults.simpleEdit === false) {
       var itemHref = obj.attr('href');
     } else {
       var itemHref = obj.attr('href').replace('/_edit', '');
       obj.attr('href', itemHref);
     }
     obj.wrap('<span class="deleteHolder"></span>');
-    if (defaults.multiple == true) {
+    if (defaults.multiple === true) {
       obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
     }
     obj.click(function() {

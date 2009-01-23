@@ -1,7 +1,7 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.2 (NOV-09-2008)
- * Copyright (C) 2008 Nicholas Hubbard
+ * version: 0.2.1 (JAN-23-2009)
+ * Copyright (C) 2009 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
  *
@@ -102,7 +102,7 @@ $.fn.matrixFilter = function(options) {
 
   var obj = $(this);
   total = obj.length;
-  if (defaults.count === true) {
+  if (defaults.count) {
     $('#count').text(total + ' of ' + total);
   }
   $('#filter').keyup(function() {
@@ -116,7 +116,7 @@ $.fn.matrixFilter = function(options) {
         count++;
       };
     });
-    if (defaults.count === true) {
+    if (defaults.count) {
       $('#count').text(count + ' of ' + total);
     }
   }); //End keyup
@@ -160,33 +160,35 @@ $.fn.matrixFilter = function(options) {
 
   var options = $.extend(defaults, options);
 
-  if (defaults.multiple === true) {
+  if (defaults.multiple) {
     $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
   }
 
   return this.each(function() {
 
     var obj = $(this);
-    var itemId = obj.attr('id');
-    if (defaults.simpleEdit === false) {
+	var itemDesc = obj.attr('rel');
+    if (defaults.simpleEdit) {
       var itemHref = obj.attr('href');
     } else {
       var itemHref = obj.attr('href').replace('/_edit', '');
       obj.attr('href', itemHref);
     }
-    obj.wrap('<span class="deleteHolder"></span>');
-    if (defaults.multiple === true) {
-      obj.after(' <input id="' + itemId + '" class="' + defaults.checkboxClass + '" name="' + itemId + '" type="checkbox" value="' + itemHref + '" />');
+    if (defaults.multiple) {
+      obj.after(' <input class="'+defaults.checkboxClass+'" name="'+itemId+'" type="checkbox" value="'+itemHref+'" />');
     }
     obj.click(function() {
-      var question = confirm('Are you sure you want to delete asset #' + itemId);
+      if (!itemDesc == '') {
+		  var question = confirm('Are you sure you want to delete "'+itemDesc+'"?');
+	  } else {
+		  var question = confirm('Are you sure you want to delete this?');
+	  }
       if (question) {
         $.ajax({
           type: 'POST',
           url: itemHref + defaults.urlSuffix
         });
-        obj.parent('.deleteHolder').remove();
-        obj.parent().parent().remove();
+        obj.parent().remove();
       }
       return false;
     });

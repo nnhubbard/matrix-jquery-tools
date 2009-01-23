@@ -168,7 +168,7 @@ $.fn.matrixFilter = function(options) {
 
     var obj = $(this);
 	var itemDesc = obj.attr('rel');
-    if (defaults.simpleEdit) {
+    if (!defaults.simpleEdit) {
       var itemHref = obj.attr('href');
     } else {
       var itemHref = obj.attr('href').replace('/_edit', '');

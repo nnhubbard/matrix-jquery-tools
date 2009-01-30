@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.2.1 (JAN-23-2009)
+ * version: 0.2.3 (JAN-30-2009)
  * Copyright (C) 2009 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
@@ -53,13 +53,13 @@ $.fn.matrixForm = function(options) {
             if (defaults.findTarget !== '') {
               $(defaults.findTarget).show();
             }
-            if (defaults.loading != '') {
+            if (defaults.loading !== '') {
               $('#sq_commit_button').after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
             }
           },
           success: function(html) {
             $('#loadingImage').remove();
-            if (defaults.findCreated !== '' && defaults.findTarget != '') {
+            if (defaults.findCreated !== '' && defaults.findTarget !== '') {
               $(defaults.findTarget).html($(html).find(defaults.findCreated));
               setTimeout(function() {
                 $(defaults.findTarget).fadeOut('slow',
@@ -114,7 +114,7 @@ $.fn.matrixFilter = function(options) {
       } else {
         $(this).show();
         count++;
-      };
+      }
     });
     if (defaults.count) {
       $('#count').text(count + ' of ' + total);
@@ -149,64 +149,86 @@ $.fn.matrixFilter = function(options) {
   /*
 	 *This Plugin will delete single or multiple assets
 	 */
- $.fn.matrixDelete = function(options) {
+$.fn.matrixDelete = function(options) {
   var defaults = {
     multiple: false,
     checkboxClass: 'delete',
+    checkboxAfter: true,
     urlSuffix: '?action=delete',
     target: 'body',
-    simpleEdit: false
+    simpleEdit: false,
+    removeParent: true
   };
-
-  var options = $.extend(defaults, options);
-
+  var options = $.extend(defaults, options); // Add our delete button
   if (defaults.multiple) {
     $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
   }
-
   return this.each(function() {
-
     var obj = $(this);
-	var itemDesc = obj.attr('rel');
+    var itemDesc = obj.attr('rel'); 
+	// Remove simple edit url addition for links
     if (!defaults.simpleEdit) {
       var itemHref = obj.attr('href');
     } else {
       var itemHref = obj.attr('href').replace('/_edit', '');
       obj.attr('href', itemHref);
-    }
+    } 
+	// Add our multiple delete checkbox
     if (defaults.multiple) {
-      obj.after(' <input class="'+defaults.checkboxClass+'" name="'+itemId+'" type="checkbox" value="'+itemHref+'" />');
+      var deleteCheckbox = '<input class="' + defaults.checkboxClass + '" type="checkbox" value="' + itemHref + '" />';
+      if (defaults.checkboxAfter) {
+        obj.after(deleteCheckbox);
+      } else {
+        obj.before(deleteCheckbox);
+      }
     }
-    obj.click(function() {
+    obj.click(function() { 
+		// Be nice with our wording
       if (!itemDesc == '') {
-		  var question = confirm('Are you sure you want to delete "'+itemDesc+'"?');
-	  } else {
-		  var question = confirm('Are you sure you want to delete this?');
-	  }
+        var question = confirm('Are you sure you want to delete "' + itemDesc + '"?');
+      } else {
+        var question = confirm('Are you sure you want to delete this?');
+      }
       if (question) {
         $.ajax({
           type: 'POST',
           url: itemHref + defaults.urlSuffix
         });
-        obj.parent().remove();
+        if (defaults.removeParent) {
+          obj.parent().remove();
+        }
       }
       return false;
-    });
-    $('#massDelete').unbind('click');
-    $('#massDelete').click(function() {
-      var answerDelete = confirm('Are you sure you want to delete multiple assets?');
-      if (answerDelete) {
-        $('input:checked').each(function() {
-          $.ajax({
-            type: 'POST',
-            url: this.value + defaults.urlSuffix
-          });
-        });
-        $('input:checked').parent('.deleteHolder').remove();
-        $('input:checked').parent().parent().remove();
-        //$("#assetEditFrame").contents().html("");
-      }
-    });
+    }); 
+	// Check to see if the user wants to delete multiples
+    if (defaults.multiple) {
+      $('#massDelete').unbind('click');
+      $('#massDelete').click(function() { 
+		// Lets count how many items we are going to delete
+        var deleteCount = $('.' + defaults.checkboxClass + ':checked').length; 
+		// Lets be kind with our wording
+        if (deleteCount <= 1) {
+          var deleteWord = 'item';
+        } else {
+          var deleteWord = 'items';
+        }
+        var answerDelete = confirm('You are about to delete ' + deleteCount + ' ' + deleteWord + ', are you sure you want to do this?'); 
+		// If the user confirms, continue
+        if (answerDelete) {
+          $('input:checked').each(function() { 
+			// Loop through each match and run a POST for that URL
+            $.ajax({
+              type: 'POST',
+              url: this.value + defaults.urlSuffix
+            });
+          }); 
+		  // Check to see if we can remove parents
+          if (defaults.removeParent) {
+            $(this + ':checked').parent().remove();
+          }
+        }
+      });
+    }
   });
 };
 
@@ -222,19 +244,31 @@ $.fn.matrixFilter = function(options) {
 
     var options = $.extend(defaults, options);
 
-    $(defaults.target).append('<input id="duplicateInput" type="text" value="" /> <input id="duplicateConfirm" type="button" value="Duplicate" />');
+    // Add our duplicate field and button
+	$(defaults.target).append('<input id="duplicateInput" type="text" value="" /> <input id="duplicateConfirm" type="button" value="Duplicate" />');
 
     return this.each(function() {
 
       var obj = $(this);
       obj.click(function() {
-        var itemId = obj.attr('id');
         var itemHref = obj.attr('href');
+		var itemDesc = obj.attr('rel');
         $('#duplicateConfirm').unbind('click');
         $('#duplicateConfirm').click(function() {
-          var dulicateCheck = parseInt($('#duplicateInput').val());
+          var duplicateVal = $('#duplicateInput').val();
+		  if(isNaN(duplicateVal)) {
+			  alert('You have entered a value that is not a number. Please enter a number.');
+			  $('#duplicateInput').val('');
+			  return false;
+		  }
+		  var dulicateCheck = parseInt(duplicateVal);
+		  // Check our duplication limit
           if (dulicateCheck <= defaults.limit) {
-            var cloneAnswer = confirm('Are you sure you want duplicate asset #' + itemId + ' ' + dulicateCheck + ' times?');
+            if (!itemDesc == '') {
+				var cloneAnswer = confirm('Are you sure you want duplicate "' + itemDesc + '" ' + dulicateCheck + ' times?');
+			} else {
+				var cloneAnswer = confirm('Are you sure you want duplicate this ' + dulicateCheck + ' times?');
+			}
             if (cloneAnswer) {
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
@@ -245,7 +279,7 @@ $.fn.matrixFilter = function(options) {
             }
           } else {
             alert('You are limited to ' + defaults.limit + ' duplicates or less, please adjust your value.');
-            $("#duplicateInput").val("");
+            $('#duplicateInput').val('');
           }
         }); //end DuplicateConfirm
         return false;
@@ -258,22 +292,26 @@ $.fn.matrixFilter = function(options) {
 	 */
   $.fn.matrixStatus = function(options) {
     var defaults = {
-      status: '?action=live'
+      urlSuffix: '?action=live'
     };
 
     var options = $.extend(defaults, options);
 
     return this.each(function() {
-
       var obj = $(this);
+	  var itemDesc = obj.attr('rel');
       var itemId = obj.attr('id');
       var itemHref = obj.attr('href');
       obj.click(function() {
-        var question = confirm('Are you sure you want change the status of asset #' + itemId + ' ?');
+      if (!itemDesc == '') {
+		  var question = confirm('Are you sure you want to change the status of "'+itemDesc+'"?');
+	  } else {
+		  var question = confirm('Are you sure you want to change the status?');
+	  }
         if (question) {
           $.ajax({
             type: 'POST',
-            url: itemHref + defaults.status
+            url: itemHref + defaults.urlSuffix
           });
         }
         return false;

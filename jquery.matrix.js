@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.2.3 (JAN-30-2009)
+ * version: 0.2.4 (FEB-25-2009)
  * Copyright (C) 2009 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
@@ -81,8 +81,11 @@ $.fn.matrixForm = function(options) {
         obj.submit();
         //obj.html(iframeContent);
       });
+	  
     } //End Else
+	
   });
+  
 };
   
   /*
@@ -119,7 +122,9 @@ $.fn.matrixFilter = function(options) {
     if (defaults.count) {
       $('#count').text(count + ' of ' + total);
     }
+	
   }); //End keyup
+  
 };
 
   /*
@@ -144,6 +149,7 @@ $.fn.matrixFilter = function(options) {
       obj.attr('target', 'assetEditFrame');
       obj.attr('href', itemHref + defaults.urlSuffix);
     });
+	
   };
 
   /*
@@ -157,7 +163,8 @@ $.fn.matrixDelete = function(options) {
     urlSuffix: '?action=delete',
     target: 'body',
     simpleEdit: false,
-    removeParent: true
+    removeParent: true,
+	onComplete: function() {}
   };
   var options = $.extend(defaults, options); // Add our delete button
   if (defaults.multiple) {
@@ -198,6 +205,10 @@ $.fn.matrixDelete = function(options) {
           obj.parent().remove();
         }
       }
+	  
+	  // Run our custom callback
+	  defaults.onComplete();
+	  
       return false;
     }); 
 	// Check to see if the user wants to delete multiples
@@ -225,11 +236,19 @@ $.fn.matrixDelete = function(options) {
 		  // Check to see if we can remove parents
           if (defaults.removeParent) {
             $(this + ':checked').parent().remove();
-          }
-        }
-      });
-    }
-  });
+          }//end removeParent
+		  
+		  // Run our custom callback
+		  defaults.onComplete();
+		  
+        }//end if (answerDelete)
+		
+      });//end click function
+	  
+    }//end if (defaults.multiple)
+	
+  });//end return
+  
 };
 
   /*
@@ -239,7 +258,8 @@ $.fn.matrixDelete = function(options) {
     var defaults = {
       limit: 10,
       urlSuffix: '?action=duplicate',
-      target: 'body'
+      target: 'body',
+	  onComplete: function() {}
     };
 
     var options = $.extend(defaults, options);
@@ -276,15 +296,24 @@ $.fn.matrixDelete = function(options) {
                   url: itemHref + defaults.urlSuffix
                 });
               } // for
-            }
+			  
+			  // Run our custom callback
+			  defaults.onComplete();
+			  
+            }//end if
           } else {
             alert('You are limited to ' + defaults.limit + ' duplicates or less, please adjust your value.');
             $('#duplicateInput').val('');
           }
+		  
         }); //end DuplicateConfirm
+		
         return false;
+		
       }); //end obj.click
+	  
     });
+	
   };
 
   /*
@@ -292,7 +321,8 @@ $.fn.matrixDelete = function(options) {
 	 */
   $.fn.matrixStatus = function(options) {
     var defaults = {
-      urlSuffix: '?action=live'
+      urlSuffix: '?action=live',
+	  onComplete: function() {}
     };
 
     var options = $.extend(defaults, options);
@@ -313,10 +343,17 @@ $.fn.matrixDelete = function(options) {
             type: 'POST',
             url: itemHref + defaults.urlSuffix
           });
+		  
+		  // Run our custom callback
+		  defaults.onComplete();
+		  
         }
         return false;
+		
       });
+	  
     });
+	
   };
   
   /*
@@ -349,8 +386,12 @@ $.fn.matrixDelete = function(options) {
           url: location.href,
 		  data: '?action=change&details=' + saveContent
         });
+		
       });
+	  
     });
+	
   };
+  
   //End  
 })(jQuery);

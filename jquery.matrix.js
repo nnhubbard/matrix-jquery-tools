@@ -204,11 +204,11 @@ $.fn.matrixDelete = function(options) {
         if (defaults.removeParent) {
           obj.parent().remove();
         }
-      }
 	  
 	  // Run our custom callback
-	  defaults.onComplete();
+	  defaults.onComplete.apply(obj, []);
 	  
+      }
       return false;
     }); 
 	// Check to see if the user wants to delete multiples
@@ -239,7 +239,7 @@ $.fn.matrixDelete = function(options) {
           }//end removeParent
 		  
 		  // Run our custom callback
-		  defaults.onComplete();
+		  defaults.onComplete.apply(obj, []);
 		  
         }//end if (answerDelete)
 		
@@ -298,7 +298,7 @@ $.fn.matrixDelete = function(options) {
               } // for
 			  
 			  // Run our custom callback
-			  defaults.onComplete();
+			  defaults.onComplete.apply(obj, []);
 			  
             }//end if
           } else {
@@ -345,7 +345,7 @@ $.fn.matrixDelete = function(options) {
           });
 		  
 		  // Run our custom callback
-		  defaults.onComplete();
+		  defaults.onComplete.apply(obj, []);
 		  
         }
         return false;

@@ -163,7 +163,7 @@ $.fn.matrixDelete = function(options) {
     urlSuffix: '?action=delete',
     target: 'body',
     simpleEdit: false,
-    removeParent: true,
+    removeParent: false,
 	onComplete: function() {}
   };
   var options = $.extend(defaults, options); // Add our delete button

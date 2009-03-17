@@ -1,6 +1,6 @@
 /*
  * MySource Matrix Simple Edit Tools (jquery.matrix.js)
- * version: 0.2.4 (FEB-25-2009)
+ * version: 0.2.5 (MAR-17-2009)
  * Copyright (C) 2009 Nicholas Hubbard
  * @requires jQuery v1.2.6 or later
  * @requires Trigger or Asset configuration in MySource Matrix
@@ -21,14 +21,14 @@ function page_on_load() {
   /*
 	 *This Plugin will allow you to submit an asset builder using ajax, including wysiwyg editor fields.
 	 */
-$.fn.matrixForm = function(options) {
-  var defaults = {
-    findCreated: '',
-    findTarget: '',
-    loading: ''
-  };
+	$.fn.matrixForm = function(options) {
+		var defaults = {
+			findCreated: '',
+			findTarget: '',
+			loading: ''
+		};
 
-  var options = $.extend(defaults, options);
+		var options = $.extend(defaults, options);
 
   return this.each(function() {
 
@@ -156,16 +156,17 @@ $.fn.matrixFilter = function(options) {
 	 *This Plugin will delete single or multiple assets
 	 */
 $.fn.matrixDelete = function(options) {
-  var defaults = {
-    multiple: false,
-    checkboxClass: 'delete',
-    checkboxAfter: true,
-    urlSuffix: '?action=delete',
-    target: 'body',
-    simpleEdit: false,
-    removeParent: false,
-	onComplete: function() {}
-  };
+	var defaults = {
+		multiple: false,
+		checkboxClass: 'delete',
+		checkboxAfter: true,
+		urlSuffix: '?action=delete',
+		target: 'body',
+		simpleEdit: false,
+		removeParent: false,
+		beforeComplete: function() {},
+		onComplete: function() {}
+	};
   var options = $.extend(defaults, options); // Add our delete button
   if (defaults.multiple) {
     $(defaults.target).append('<input id="massDelete" type="button" value="Delete Multiple" />');
@@ -197,6 +198,9 @@ $.fn.matrixDelete = function(options) {
         var question = confirm('Are you sure you want to delete this?');
       }
       if (question) {
+		  // Run our custom callback
+		  defaults.beforeComplete.apply(obj, []);
+		  
         $.ajax({
           type: 'POST',
           url: itemHref + defaults.urlSuffix
@@ -226,20 +230,23 @@ $.fn.matrixDelete = function(options) {
         var answerDelete = confirm('You are about to delete ' + deleteCount + ' ' + deleteWord + ', are you sure you want to do this?'); 
 		// If the user confirms, continue
         if (answerDelete) {
-          $('input:checked').each(function() { 
+          $('input:checked').each(function() {
+			  // Run our custom callback
+			  defaults.beforeComplete.apply($(this), []);
 			// Loop through each match and run a POST for that URL
             $.ajax({
               type: 'POST',
               url: this.value + defaults.urlSuffix
             });
+			
+		  // Run our custom callback
+		  defaults.onComplete.apply($(this), []);
+		  
           }); 
 		  // Check to see if we can remove parents
           if (defaults.removeParent) {
             $(this + ':checked').parent().remove();
           }//end removeParent
-		  
-		  // Run our custom callback
-		  defaults.onComplete.apply(obj, []);
 		  
         }//end if (answerDelete)
 		
@@ -256,10 +263,11 @@ $.fn.matrixDelete = function(options) {
 	 */
   $.fn.matrixClone = function(options) {
     var defaults = {
-      limit: 10,
-      urlSuffix: '?action=duplicate',
-      target: 'body',
-	  onComplete: function() {}
+		limit: 10,
+		urlSuffix: '?action=duplicate',
+		target: 'body',
+		beforeComplete: function() {},
+		onComplete: function() {}
     };
 
     var options = $.extend(defaults, options);
@@ -290,6 +298,10 @@ $.fn.matrixDelete = function(options) {
 				var cloneAnswer = confirm('Are you sure you want duplicate this ' + dulicateCheck + ' times?');
 			}
             if (cloneAnswer) {
+				
+			  // Run our custom callback
+			  defaults.beforeComplete.apply(obj, []);
+				
               for (i = 1; i <= dulicateCheck; i++) {
                 $.ajax({
                   type: 'POST',
@@ -320,10 +332,11 @@ $.fn.matrixDelete = function(options) {
 	 *This Plugin will change the status of an asset
 	 */
   $.fn.matrixStatus = function(options) {
-    var defaults = {
-      urlSuffix: '?action=live',
-	  onComplete: function() {}
-    };
+	var defaults = {
+		urlSuffix: '?action=live',
+		beforeComplete: function() {},
+		onComplete: function() {}
+	};
 
     var options = $.extend(defaults, options);
 
@@ -339,6 +352,9 @@ $.fn.matrixDelete = function(options) {
 		  var question = confirm('Are you sure you want to change the status?');
 	  }
         if (question) {
+		  // Run our custom callback
+		  defaults.beforeComplete.apply(obj, []);
+		  
           $.ajax({
             type: 'POST',
             url: itemHref + defaults.urlSuffix
@@ -362,36 +378,36 @@ $.fn.matrixDelete = function(options) {
 	 *Current page URL, %asset_url% must be passed to function
 	 *Work in progress!!
 	 */
-  $.fn.matrixEdit = function(options) {
-    var defaults = {
-      //None yet
-    };
-
-    var options = $.extend(defaults, options);
-
-    return this.each(function() {
-
-      var obj = $(this);
-      obj.click(function() {
-        obj.attr('contentEditable', 'true').css('background-color', '#ccc');
-      });
-      obj.blur(function() {
-        obj.attr('contentEditable', 'false').css('background-color', '#fff');
-      });
-      $('#save').click(function() {
-        var saveContent = obj.html();
-        var currentHref = defaults.currentPage;
-        $.ajax({
-          type: 'POST',
-          url: location.href,
-		  data: '?action=change&details=' + saveContent
-        });
-		
-      });
-	  
-    });
+	$.fn.matrixEdit = function(options) {
+		var defaults = {
+		//None yet
+		};
 	
-  };
+		var options = $.extend(defaults, options);
+	
+		return this.each(function() {
+		
+			var obj = $(this);
+			obj.click(function() {
+				obj.attr('contentEditable', 'true').css('background-color', '#ccc');
+			});
+			obj.blur(function() {
+				obj.attr('contentEditable', 'false').css('background-color', '#fff');
+			});
+			$('#save').click(function() {
+				var saveContent = obj.html();
+				var currentHref = defaults.currentPage;
+				$.ajax({
+					type: 'POST',
+					url: location.href,
+					data: '?action=change&details=' + saveContent
+				});
+			
+			});
+		
+		});
+	
+	};
   
   //End  
 })(jQuery);

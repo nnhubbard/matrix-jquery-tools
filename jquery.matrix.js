@@ -31,7 +31,7 @@ function page_on_load() {
 * Plugin that allows Asset Builders to be submitted using Ajax.  
 * This is nessessary to allow Matrix to open a from as a stand alone.
 *
-* @version $Revision: 0.2
+* @version $Revision: 0.2.8
 */
 $.fn.matrixForm = function (options) {
 	var defaults = {

@@ -39,7 +39,9 @@ $.fn.matrixForm = function (options) {
 		findTarget: '',
 		loading: '',
 		errorArray: false,
-		errorSource: ''
+		errorSource: '',
+		errorMessage: 'Please correct the following errors:',
+		onComplete: function () {}
 	};
 
 	var options = $.extend(defaults, options);
@@ -144,8 +146,11 @@ $.fn.matrixForm = function (options) {
 							
 							// Display alert if array is not empty
 							if (!arry_empyty) {
-								alert('Please correct the following errors:\n\n' + arr_errors.toString().replace(',', '\n'));	
-							}
+								alert(defaults.errorMessage + '\n\n' + arr_errors.join('\n'));	
+							} else {
+								// Since our array is empyty, our form must have been submitted correcty
+								defaults.onComplete.apply(obj, []);	
+							}// End else
 							
 						}// End if
 							

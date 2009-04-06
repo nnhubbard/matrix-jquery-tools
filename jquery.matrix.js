@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.2.6 (APR-03-2009)
+* version: 0.2.8 (APR-06-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.2.6 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -45,16 +45,41 @@ $.fn.matrixForm = function (options) {
 	return this.each(function () {
 
 		var obj = $(this);
-		var itemId = obj.attr('id');
 		var itemHref = obj.attr('action');
 		obj.removeAttr('onsubmit');
 		
+		// Check to see if we are using an asset builder or custom form
+		var form_type = $('#sq_commit_button', obj).length === 0;
+		
+		// Find our submit button for custom forms
+		var form_submit = $("input[type='submit']", obj);
+		var form_submit_name = form_submit.attr('name');
+		var form_submit_val = form_submit.attr('value');
+		var form_submit_class = form_submit.attr('class');
+		
 		// Check to see if we are uploading a file
-		if ($('input:file').length === 0) {
+		if ($(obj + ' input:file').length === 0) {
 			$('#sq_commit_button').removeAttr('onclick');
 			
+			// Choose if we should set click for asset builder or custom form
+			if (form_type) {
+				var set_click = 'ajax_submit';
+				
+				// Hide the submit button
+				form_submit.hide();
+				
+				// Add a new button
+				form_submit.after('<input id="ajax_submit" type="button" class="' + form_submit_class +'" name="' + form_submit_name +'" value="' + form_submit_val +'" />');
+				form_submit.remove();
+				
+				// Creat our own submit string, since serialize won't grab it
+				var ajax_query = '&' + form_submit_name + '=' + form_submit_val + '';
+			} else {
+				var set_click = 'sq_commit_button';
+			}// End else
+			
 			// Set our click function for commit button
-			$('#sq_commit_button').click(function () {
+			$('#' + set_click).click(function () {
 				$('textarea[name^="news_item"], textarea[name^="calendar_event"]').each(function () {
 					var textId = $(this).attr('id');
 					$(this).val(eval('editor_' + textId + '.getHTML();'));
@@ -67,13 +92,13 @@ $.fn.matrixForm = function (options) {
 				$.ajax({
 					type: 'POST',
 					url: itemHref,
-					data: serializeForm,
+					data: serializeForm + ajax_query,
 					beforeSend: function () {
 						if (defaults.findTarget !== '') {
 							$(defaults.findTarget).show();
 						}
 						if (defaults.loading !== '') {
-							$('#sq_commit_button').after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
+							$('#' + set_click).after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
 						}
 					},
 					success: function (html) {
@@ -81,13 +106,23 @@ $.fn.matrixForm = function (options) {
 						if (defaults.findCreated !== '' && defaults.findTarget !== '') {
 							$(defaults.findTarget).html($(html).find(defaults.findCreated));
 							
+							// Create an array of our error messages
+							var arr_errors = new Array();
+							$(defaults.findTarget + ' li').each(function() { 
+								arr.push(this.innerHTML); 
+							});
+							// Is array empty?
+							var arry_empyty = arr_errors.length;
+							
 							setTimeout(function () {
 								$(defaults.findTarget).fadeOut('slow',
 									function () {
 										$(this).html('');
 									});
 								},
-						5000);// End timout
+								5000
+								
+							);// End timout
 							
 						}// End if
 						
@@ -183,7 +218,6 @@ $.fn.matrixFrame = function (options) {
 	return this.each(function () {
 
 		var obj = $(this);
-		var itemId = obj.attr('id');
 		var itemHref = obj.attr('href');
 		obj.attr('target', 'assetEditFrame');
 		obj.attr('href', itemHref + defaults.urlSuffix);
@@ -423,7 +457,6 @@ $.fn.matrixStatus = function (options) {
 	return this.each(function () {
 		var obj = $(this);
 		var itemDesc = obj.attr('rel');
-		var itemId = obj.attr('id');
 		var itemHref = obj.attr('href');
 		obj.click(function () {
 			

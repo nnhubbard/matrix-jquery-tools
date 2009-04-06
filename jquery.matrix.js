@@ -15,7 +15,7 @@
 
 /**
 * Function that overrides page_on_load in limbo_outputter.inc.  
-* This is nessessary to allow Matrix to open a from as a stand alone.
+* This is nessessary to allow Matrix to open a frame as a stand alone.
 *
 * @version $Revision: 0.1 $
 */
@@ -62,6 +62,7 @@ $.fn.matrixForm = function (options) {
 				
 				// Serialize all form data
 				var serializeForm = obj.serialize();
+				
 				// Submit using Ajax
 				$.ajax({
 					type: 'POST',

@@ -37,7 +37,9 @@ $.fn.matrixForm = function (options) {
 	var defaults = {
 		findCreated: '',
 		findTarget: '',
-		loading: ''
+		loading: '',
+		errorArray: false,
+		errorSource: ''
 	};
 
 	var options = $.extend(defaults, options);
@@ -101,18 +103,10 @@ $.fn.matrixForm = function (options) {
 							$('#' + set_click).after('<img id="loadingImage" src="' + defaults.loading + '" alt="Loading" />');
 						}
 					},
-					success: function (html) {
+					success: function (data) {
 						$('#loadingImage').remove();
 						if (defaults.findCreated !== '' && defaults.findTarget !== '') {
-							$(defaults.findTarget).html($(html).find(defaults.findCreated));
-							
-							// Create an array of our error messages
-							var arr_errors = new Array();
-							$(defaults.findTarget + ' li').each(function() { 
-								arr.push(this.innerHTML); 
-							});
-							// Is array empty?
-							var arry_empyty = arr_errors.length;
+							$(defaults.findTarget).html($(data).find(defaults.findCreated));
 							
 							setTimeout(function () {
 								$(defaults.findTarget).fadeOut('slow',
@@ -125,7 +119,36 @@ $.fn.matrixForm = function (options) {
 							);// End timout
 							
 						}// End if
-						
+							
+						if (defaults.errorArray) {
+							// We don't want to create multiples
+							if ($('#errorsHiddenHold').length < 1) {
+								// Create a hidden div to hold our errors
+								$('body').append('<div id="errorsHiddenHold" style="display:none;"></div>');
+							}
+							// Add our content
+							$('#errorsHiddenHold').html($(data).find(defaults.errorSource));
+							
+							// Create an array of our error messages
+							var arr_errors = new Array();
+							$('#errorsHiddenHold li').each(function() { 
+								arr_errors.push($(this).text()); 
+							});
+							
+							// Is array empty?
+							if (arr_errors.length < 1) {
+								var arry_empyty = true;
+							} else {
+								var arry_empyty = false;
+							}// End if
+							
+							// Display alert if array is not empty
+							if (!arry_empyty) {
+								alert('Please correct the following errors:\n\n' + arr_errors.toString().replace(',', '\n'));	
+							}
+							
+						}// End if
+							
 					}// End success
 					
 				});// End Ajax

@@ -398,7 +398,8 @@ $.fn.matrixClone = function (options) {
 		urlSuffix: '?action=duplicate',
 		target: 'body',
 		beforeComplete: function () {},
-		onComplete: function () {}
+		onComplete: function () {},
+		onSelect: function () {}
 	};
 
 	var options = $.extend(defaults, options);
@@ -413,6 +414,10 @@ $.fn.matrixClone = function (options) {
 			var itemHref = obj.attr('href');
 			var itemDesc = obj.attr('rel');
 			$('#duplicateConfirm').unbind('click');
+			
+			// Add our select callback
+			defaults.onSelect.apply(obj, []);
+			
 			$('#duplicateConfirm').click(function () {
 				var duplicateVal = $('#duplicateInput').val();
 				

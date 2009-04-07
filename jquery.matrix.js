@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.2.8 (APR-06-2009)
+* version: 0.2.8.1 (APR-06-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.2.6 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -390,7 +390,7 @@ $.fn.matrixDelete = function (options) {
 * This Plugin will clone the current asset and link to the same parent.  
 * Plugin requires the configuration of a Trigger to clone assets.
 *
-* @version $Revision: 0.2.5
+* @version $Revision: 0.2.8.1
 */
 $.fn.matrixClone = function (options) {
 	var defaults = {
@@ -398,7 +398,8 @@ $.fn.matrixClone = function (options) {
 		urlSuffix: '?action=duplicate',
 		target: 'body',
 		beforeComplete: function () {},
-		onComplete: function () {}
+		onComplete: function () {},
+		onSelect: function () {}
 	};
 
 	var options = $.extend(defaults, options);
@@ -413,6 +414,10 @@ $.fn.matrixClone = function (options) {
 			var itemHref = obj.attr('href');
 			var itemDesc = obj.attr('rel');
 			$('#duplicateConfirm').unbind('click');
+			
+			// Add our select callback
+			defaults.onSelect.apply(obj, []);
+			
 			$('#duplicateConfirm').click(function () {
 				var duplicateVal = $('#duplicateInput').val();
 				

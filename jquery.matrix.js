@@ -1,8 +1,8 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-07-2009)
+* version: 0.3 (APR-08-2009)
 * Copyright (C) 2009 Nicholas Hubbard
-* @requires jQuery v1.2.6 or later
+* @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
 *
 * Examples and documentation at: http://www.zedsaid.com/projects/simple-edit-tools
@@ -36,7 +36,8 @@ function page_on_load() {
 */
 $.fn.matrixMap = function (options) {
 	var defaults = {
-		findCreated: ''
+		root: '1',
+		showChildren: false
 	};
 	
 	var options = $.extend(defaults, options);
@@ -48,32 +49,151 @@ $.fn.matrixMap = function (options) {
 	var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
 	
 	// Construct our XML to send
-	var xmlDocument = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="311" start="0" limit="150" linkid="10" /></command>';
+	//var xml_move = '<command action="move asset" to_parent_assetid="2858" to_parent_pos="1"><asset assetid="47315"  linkid="81951"  parentid="2858" /></command>';
+	var xml_get = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="' + defaults.root + '" start="0" limit="150" linkid="10" /></command>';
 	
 	// Create our element
 	obj.append('<ul id="map_root"></ul>');
 	
+	// Set somes image vars for type_2 linking
+	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
+	var type_2_image = '<img style="position:absolute; z-index:2; left:0px;" src="' + type_2_path + '" />';
+	
 	// Create our ajax to send the XML
 	$.ajax({
-		url: proto + '//' + site + "?SQ_ACTION=asset_map_request",
+		url: host_url,
 		type: 'POST',
 		processData: false,
-		data: xmlDocument,
+		data: xml_get,
 		contentType: "text/xml",
 		dataType: 'xml',
 		success: function(xml) {
+			// Check each asset that we find
 			$(xml).find('asset').each(function() {
-				var asset_id = $(this).attr('assetid')
-				var asset_type_code = $(this).attr('type_code')
-				var asset_name = $(this).attr('name')
-				$('<li></li>').html('<img src="/__data/asset_types/' + asset_type_code + '/icon.png" /> ' + unescape(asset_name).replace(/\+/g, ' ') + ' (' + asset_type_code + ') - ' + asset_id).appendTo('#map_root');
+				// Only include asset tags with attributesp
+				if ($(this).attr('assetid') > 0) {
+					// Set some of our vars that will populate our asset map
+					var asset_id = unescape($(this).attr('assetid'));
+					var asset_status = $(this).attr('status');
+					var asset_link_type = parseInt($(this).attr('link_type'));
+					var asset_type_code = $(this).attr('type_code');
+					var asset_num_kids = parseInt($(this).attr('num_kids'));
+					var asset_name = unescape($(this).attr('name')).replace(/\+/g, ' ');
+					// See what kind of link type we have
+					if (asset_link_type === 2) {
+						// Type 2 link
+						var asset_image = '<img style="position:absolute; z-index:1; left:0px;" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+						var asset_image = '<span style="padding:0 8px; position:relative;">' + type_2_image + asset_image + '</span>';
+					} else {
+						// Type 1 link
+						var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+					}
+					
+					// See if we have kids
+					if (asset_num_kids === 0) {
+						var indicate_kids = ' ';
+					} else {
+						var indicate_kids = '+ ';
+					}
+					$('<li style="position:relative;"></li>').html(indicate_kids + asset_image + ' <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo('#map_root');
+				}// End if
 			
 			});// End each
 			
 		}// End success
 		
 	});// End ajax
-
+	
+	// Lets click our parents to show their children
+	$('#map_root li a').live('dblclick', function(){
+		
+		// Get our current asset
+		var current_asset = $(this);
+		var sub_root = $(this).attr('id').replace('a', '');
+		var num_kids = $(this).attr('rel');
+		
+		// If there are no kids don't continue
+		if (num_kids === '0') {
+			return;	
+		}
+		
+		// Check to see if we already have a class
+		if (current_asset.hasClass('children')) {
+			current_asset.removeClass('children');
+			// Hide our tree
+			current_asset.parent().next('ul').hide();
+			return;
+		} else {
+			// This must meen that we can expant, so add a class
+			current_asset.addClass('children');
+			// Let it know that we have expanded so we don't have to load again
+			current_asset.addClass('cache');
+		}
+		
+		// Construct our XML to send
+		var xml_get = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="' + sub_root + '" start="0" limit="150" linkid="10" /></command>';
+		
+		// Create a new list
+		current_asset.parent().after('<ul></ul>');
+		
+		// Grab our child assets
+		$.ajax({
+			url: host_url,
+			type: 'POST',
+			processData: false,
+			data: xml_get,
+			contentType: "text/xml",
+			dataType: 'xml',
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				console.log(XMLHttpRequest + textStatus + errorThrown);
+			},
+			beforeSend: function () {
+				current_asset.parent().after('<ul class="loading"><li><img src="/__lib/web/images/icons/asset_map/loading_node.png" /> Loading...</li></ul>');
+			},
+			success: function (xml) {
+				// Remove loading
+				$('.loading').remove();
+				// Check each asset that we find
+				$(xml).find('asset').each(function() {
+					// Only include asset tags with attributesp
+					if ($(this).attr('assetid') > 0) {
+						// Set some of our vars that will populate our asset map
+						var asset_id = unescape($(this).attr('assetid'));
+						var asset_type_code = $(this).attr('type_code');
+						var asset_link_type = parseInt($(this).attr('link_type'));
+						var asset_num_kids = parseInt($(this).attr('num_kids'));
+						var asset_name = unescape($(this).attr('name')).replace(/\+/g, ' ');
+						var asset_image = ' <img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+						// See what kind of link type we have
+						if (asset_link_type === 2) {
+							// Type 2 link
+							var asset_image = '<img style="position:absolute; z-index:1; left:0px;" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+							var asset_image = '<span style="padding:0 8px;">' + type_2_image + asset_image + '</span>';
+						} else {
+							// Type 1 link
+							var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+						}
+						
+						// See if we have kids
+						if (asset_num_kids === 0) {
+							var indicate_kids = ' ';
+						} else {
+							var indicate_kids = '+ ';
+						}
+						
+						$('<li style="position:relative;"></li>').html(indicate_kids + asset_image + ' <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(current_asset.parent().next());
+					}// End if
+				
+				});// End each
+				
+			}// End success
+			
+		});// End ajax
+		
+		return false;
+		
+	});// End live click
+	
 };// End matrixMap
 
 

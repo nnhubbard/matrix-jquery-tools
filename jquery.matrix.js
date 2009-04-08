@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.2.8 (APR-06-2009)
+* version: 0.3 (APR-07-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.2.6 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -25,8 +25,58 @@ function page_on_load() {
 
 
 (function ($) {
-		  
-  
+	  
+
+/**
+* Plugin that allows you to browse the MySource Matrix asset tree structure.  
+* This is beneficial sometimes as you can bypass the java asset map.
+* It sends XML to Matrix, then receives an XML response.
+*
+* @version $Revision: 0.3
+*/
+$.fn.matrixMap = function (options) {
+	var defaults = {
+		findCreated: ''
+	};
+	
+	var options = $.extend(defaults, options);
+	var obj = $(this);
+	
+	// Find out what site we are at
+	var proto = location.protocol;
+	var site = location.host;
+	var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
+	
+	// Construct our XML to send
+	var xmlDocument = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="311" start="0" limit="150" linkid="10" /></command>';
+	
+	// Create our element
+	obj.append('<ul id="map_root"></ul>');
+	
+	// Create our ajax to send the XML
+	$.ajax({
+		url: proto + '//' + site + "?SQ_ACTION=asset_map_request",
+		type: 'POST',
+		processData: false,
+		data: xmlDocument,
+		contentType: "text/xml",
+		dataType: 'xml',
+		success: function(xml) {
+			$(xml).find('asset').each(function() {
+				var asset_id = $(this).attr('assetid')
+				var asset_type_code = $(this).attr('type_code')
+				var asset_name = $(this).attr('name')
+				$('<li></li>').html('<img src="/__data/asset_types/' + asset_type_code + '/icon.png" /> ' + unescape(asset_name).replace(/\+/g, ' ') + ' (' + asset_type_code + ') - ' + asset_id).appendTo('#map_root');
+			
+			});// End each
+			
+		}// End success
+		
+	});// End ajax
+
+};// End matrixMap
+
+
 /**
 * Plugin that allows Asset Builders to be submitted using Ajax.  
 * This is nessessary to allow Matrix to open a from as a stand alone.

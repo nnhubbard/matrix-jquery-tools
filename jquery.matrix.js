@@ -437,6 +437,7 @@ $.fn.matrixFrame = function (options) {
 $.fn.matrixDelete = function (options) {
 	var defaults = {
 		multiple: false,
+		trigger: true,
 		checkboxClass: 'delete',
 		checkboxAfter: true,
 		urlSuffix: '?action=delete',
@@ -459,6 +460,7 @@ $.fn.matrixDelete = function (options) {
 		
 		// Grab asset info
 		var itemDesc = obj.attr('rel'); 
+		var item_id = obj.attr('id'); 
 		
 		// Remove simple edit url addition for links
 		if (!defaults.simpleEdit) {
@@ -490,12 +492,92 @@ $.fn.matrixDelete = function (options) {
 			if (question) {
 				// Run our custom callback
 				defaults.beforeComplete.apply(obj, []);
-			
-				$.ajax({
-					type: 'POST',
-					url: itemHref + defaults.urlSuffix
-				});// End ajax
 				
+				if (defaults.trigger) {
+					$.ajax({
+						type: 'POST',
+						url: itemHref + defaults.urlSuffix
+					});// End ajax
+				} else {
+					// Looks like we are going to run this straight through the server, no triggers! Hooray!
+					
+					// Find out what site we are at
+					var proto = location.protocol;
+					var site = location.host;
+					var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
+					var path_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=contents';
+					
+					// Find current asset path in asset map
+					$.ajax({
+						url: path_url,
+						type: 'GET',
+						cache: false,
+						error: function() {
+							alert('You must be logged in to MySource Matrix in order to delete this asset.');
+							return;
+						},
+						success: function(html){
+							var link_path = $(html).find("img[alt='Show in Asset Map']").attr('onclick');
+							link_path = link_path.toString().split('asset_locator_start(');
+							link_path = link_path[1].toString().split('"');
+							link_path = link_path[1].toString().split('~');
+							link_path = link_path[0].toString().split('|');
+							// Modify our array
+							var arr_xml = new Array();
+							var x;
+							for (x in link_path) {
+								arr_xml.push('<command action="get assets"><asset assetid="' + link_path[x] + '" start="0" limit="150" linkid="10" /></command>');
+							}
+							alert(arr_xml.join('\n'));
+						}
+					});
+					
+					// Construct our XML to send
+					var xml_get = '<command action="get assets"><asset assetid="' + item_id + '" start="0" limit="150" linkid="10" /></command>';
+					var xml_move = '<command action="move asset" to_parent_assetid="10" to_parent_pos="0"><asset assetid="47315"  linkid="81951"  parentid="2858" /></command>';
+					
+					// Since we don't really know anything about this asset, we need to look up some info for it.
+					$.ajax({
+						url: host_url,
+						type: 'POST',
+						processData: false,
+						data: xml_get,
+						contentType: "text/xml",
+						dataType: 'xml',
+						success: function(xml) {
+							// Create an array to hold attributes
+							var arr_current_item = new Array();
+							
+							// Check each asset that we find
+							$(xml).find('asset').each(function() {
+								// Only include asset tags with attributesp
+								if (parseInt($(this).attr('assetid')) > 0 && $(this).attr('assetid') === item_id) {
+									// Set some of our vars that will populate our asset map
+									arr_current_item.push(parseInt($(this).attr('assetid')));
+									arr_current_item.push(unescape($(this).attr('name')).replace(/\+/g, ' '));
+									arr_current_item.push($(this).attr('type_code'));
+									arr_current_item.push(parseInt($(this).attr('link_type')));
+									arr_current_item.push(parseInt($(this).attr('accessible')));
+									arr_current_item.push(parseInt($(this).attr('status')));
+									arr_current_item.push(parseInt($(this).attr('sort_order')));
+									arr_current_item.push($(this).attr('url'));
+									arr_current_item.push($(this).attr('web_path'));
+									arr_current_item.push(parseInt($(this).attr('num_kids')));
+									arr_current_item.push(parseInt($(this).attr('linkid')));
+								
+									// Lets see what is inside
+									alert(arr_current_item.join('\n'));
+								
+								}// End if
+							
+							});// End each
+							
+						}// End success
+						
+					});// End ajax
+					
+				}// End else
+			
 				if (defaults.removeParent) {
 					obj.parent().remove();
 				}// End if

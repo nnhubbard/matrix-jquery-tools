@@ -50,14 +50,17 @@ $.fn.matrixMap = function (options) {
 	
 	// Construct our XML to send
 	//var xml_move = '<command action="move asset" to_parent_assetid="2858" to_parent_pos="1"><asset assetid="47315"  linkid="81951"  parentid="2858" /></command>';
-	var xml_get = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="' + defaults.root + '" start="0" limit="150" linkid="10" /></command>';
+	var xml_get = '<command action="get assets"><asset assetid="' + defaults.root + '" start="0" limit="150" linkid="10" /></command>';
 	
 	// Create our element
 	obj.append('<ul id="map_root"></ul>');
 	
-	// Set somes image vars for type_2 linking
+	// Set somes image vars
 	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
-	var type_2_image = '<img style="position:absolute; z-index:2; left:0px;" src="' + type_2_path + '" />';
+	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
+	var branch_closed = '<img src="/__lib/web/images/tree/branch_closed.gif" />';
+	var branch_open = '<img src="/__lib/web/images/tree/branch_open.gif" />';
+	var branch_stalk = '<img src="/__lib/web/images/tree/stalk" />';
 	
 	// Create our ajax to send the XML
 	$.ajax({
@@ -82,8 +85,8 @@ $.fn.matrixMap = function (options) {
 					// See what kind of link type we have
 					if (asset_link_type === 2) {
 						// Type 2 link
-						var asset_image = '<img style="position:absolute; z-index:1; left:0px;" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
-						var asset_image = '<span style="padding:0 8px; position:relative;">' + type_2_image + asset_image + '</span>';
+						var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+						var asset_image = type_2_image + asset_image;
 					} else {
 						// Type 1 link
 						var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
@@ -91,11 +94,11 @@ $.fn.matrixMap = function (options) {
 					
 					// See if we have kids
 					if (asset_num_kids === 0) {
-						var indicate_kids = ' ';
+						var indicate_kids = branch_stalk;
 					} else {
-						var indicate_kids = '+ ';
+						var indicate_kids = branch_closed;
 					}
-					$('<li style="position:relative;"></li>').html(indicate_kids + asset_image + ' <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo('#map_root');
+					$('<li></li>').html(indicate_kids + '<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo('#map_root');
 				}// End if
 			
 			});// End each
@@ -131,7 +134,7 @@ $.fn.matrixMap = function (options) {
 		}
 		
 		// Construct our XML to send
-		var xml_get = '<?xml version="1.0" encoding="UTF-8"?><command action="get assets"><asset assetid="' + sub_root + '" start="0" limit="150" linkid="10" /></command>';
+		var xml_get = '<command action="get assets"><asset assetid="' + sub_root + '" start="0" limit="150" linkid="10" /></command>';
 		
 		// Create a new list
 		current_asset.parent().after('<ul></ul>');
@@ -167,8 +170,8 @@ $.fn.matrixMap = function (options) {
 						// See what kind of link type we have
 						if (asset_link_type === 2) {
 							// Type 2 link
-							var asset_image = '<img style="position:absolute; z-index:1; left:0px;" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
-							var asset_image = '<span style="padding:0 8px;">' + type_2_image + asset_image + '</span>';
+							var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+							var asset_image = type_2_image + asset_image;
 						} else {
 							// Type 1 link
 							var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
@@ -176,12 +179,12 @@ $.fn.matrixMap = function (options) {
 						
 						// See if we have kids
 						if (asset_num_kids === 0) {
-							var indicate_kids = ' ';
+							var indicate_kids = branch_stalk;
 						} else {
-							var indicate_kids = '+ ';
+							var indicate_kids = branch_closed;
 						}
 						
-						$('<li style="position:relative;"></li>').html(indicate_kids + asset_image + ' <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(current_asset.parent().next());
+						$('<li></li>').html(indicate_kids + '<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(current_asset.parent().next());
 					}// End if
 				
 				});// End each

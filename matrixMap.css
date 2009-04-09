@@ -1,0 +1,18 @@
+/* Styles for jquery.matrix.js matrixMap plugin */
+
+/* Tree */
+#map_root {width: 350px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0;}
+#map_root li {list-style: none; margin: 0;}
+#map_root li a {color: #000; font-size: .9em;}
+#map_root li a:hover {color: #000;}
+#map_root li img {margin-bottom: -6px;}
+
+/* Icons */
+#map_root a {padding-left: 16px;}
+#map_root a.icon_hold {position: relative; padding-left: 0;}
+#map_root a.icon_hold img.type_2 {position: absolute; z-index: 2; top: 0; left: 0;}
+#map_root a.icon_hold img.asset_image,
+#map_root a.icon_hold img {position: absolute; z-index: 1; top: 0; left: 0;}
+
+/* Loading */
+#map_root ul.loading {font-size: .9em;}

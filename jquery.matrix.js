@@ -506,10 +506,11 @@ $.fn.matrixDelete = function (options) {
 					var site = location.host;
 					var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
 					var path_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=contents';
+					var linking_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
 					
 					// Find current asset path in asset map
 					$.ajax({
-						url: path_url,
+						url: linking_url,
 						type: 'GET',
 						cache: false,
 						error: function() {
@@ -517,7 +518,28 @@ $.fn.matrixDelete = function (options) {
 							return;
 						},
 						success: function(html){
-							var link_path = $(html).find("img[alt='Show in Asset Map']").attr('onclick');
+							var arr_linking = new Array();
+							var main_form = $(html + ' #main_form');
+							$(html).find('form').each(function() {
+								var linking_data = $(this).serialize();	
+								var form_action = $(this).attr('action');
+								alert(form_action);
+							});
+							
+							// Acquire Locks
+							$.ajax({
+								url: form_action,
+								data: linking_data,
+								type: 'POST',
+								cache: false,
+								error: function() {
+									alert('Could not aquire locks!');
+									return;
+								}
+							});
+							return;
+							
+/*							var link_path = $(html).find("img[alt='Show in Asset Map']").attr('onclick');
 							link_path = link_path.toString().split('asset_locator_start(');
 							link_path = link_path[1].toString().split('"');
 							link_path = link_path[1].toString().split('~');
@@ -529,7 +551,7 @@ $.fn.matrixDelete = function (options) {
 								arr_xml.push('<command action="get assets"><asset assetid="' + link_path[x] + '" start="0" limit="150" linkid="10" /></command>');
 							}
 							alert(arr_xml.join('\n'));
-						}
+*/						}// End success
 					});
 					
 					// Construct our XML to send
@@ -537,7 +559,7 @@ $.fn.matrixDelete = function (options) {
 					var xml_move = '<command action="move asset" to_parent_assetid="10" to_parent_pos="0"><asset assetid="47315"  linkid="81951"  parentid="2858" /></command>';
 					
 					// Since we don't really know anything about this asset, we need to look up some info for it.
-					$.ajax({
+/*					$.ajax({
 						url: host_url,
 						type: 'POST',
 						processData: false,
@@ -575,7 +597,7 @@ $.fn.matrixDelete = function (options) {
 						}// End success
 						
 					});// End ajax
-					
+*/					
 				}// End else
 			
 				if (defaults.removeParent) {

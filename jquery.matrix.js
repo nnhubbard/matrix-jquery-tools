@@ -500,7 +500,6 @@ $.fn.matrixDelete = function (options) {
 					});// End ajax
 				} else {
 					// Looks like we are going to run this straight through the server, no triggers! Hooray!
-					
 					// Find out what site we are at
 					var proto = location.protocol;
 					var site = location.host;
@@ -508,96 +507,127 @@ $.fn.matrixDelete = function (options) {
 					var path_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=contents';
 					var linking_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
 					
-					// Find current asset path in asset map
+					// Find current asset path and stuff
 					$.ajax({
 						url: linking_url,
 						type: 'GET',
-						cache: false,
 						error: function() {
 							alert('You must be logged in to MySource Matrix in order to delete this asset.');
 							return;
 						},
 						success: function(html){
-							var arr_linking = new Array();
-							var main_form = $(html + ' #main_form');
-							$(html).find('form').each(function() {
-								var linking_data = $(this).serialize();	
-								var form_action = $(this).attr('action');
-								alert(form_action);
-							});
+							// Silly jQuery bug, lets wrap the entire html in a div
+							html = '<div>' + html + '</div>';
+							// Get our form info
+							var main_form = $('#main_form', html);
+							var form_action = main_form.attr('action');
 							
-							// Acquire Locks
-							$.ajax({
-								url: form_action,
-								data: linking_data,
-								type: 'POST',
-								cache: false,
-								error: function() {
-									alert('Could not aquire locks!');
-									return;
-								}
-							});
+							// We should check if we already have the locks
+							if (main_form.find("input[value='Acquire Lock(s)']")) {
+								var arr_current_item = new Array();
+								main_form.find('input').each(function() {
+									if ($(this).attr('name') == 'sq_lock_acquire') {
+										arr_current_item.push($(this).attr('name') + '=1');	
+									} else {
+										arr_current_item.push($(this).attr('name') + '=' + $(this).val());	
+									}
+								});
+								// Serialize this crazy stuff
+								var linking_data = arr_current_item.join('&');	
+								// Lets check and see if we need to get locks
+								$.ajax({
+									url: form_action,
+									data: linking_data,
+									type: 'POST',
+									error: function() {
+										alert('Could not aquire locks! You must be logged into MySource Matrix!');
+										return;
+									},
+									success: function(html){
+										
+										$.ajax({
+											url: linking_url,
+											type: 'GET',
+											error: function() {
+												alert('You must be logged in to MySource Matrix in order to delete this asset.');
+												return;
+											},
+											success: function(response){
+												response = '<div>' + response + '</div>';
+												var main_form_hippo = $('#main_form', response);
+												// Submit the hippo
+												// Sweet, we already have the locks, lets continue
+												var arr_linking_screen = new Array();
+												main_form_hippo.find('input, select').each(function() {
+													if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
+														arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+													} else {
+														arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
+													}
+												});// End each
+												
+												// Serialize this crazy stuff
+												var linking_data = arr_linking_screen.join('&');	
+												var form_action = main_form.attr('action');
+												$.ajax({
+													url: form_action,
+													data: linking_data,
+													type: 'POST',
+													error: function() {
+														alert('You must be logged in to MySource Matrix in order to delete this asset.');
+														return;
+													},
+													success: function(html){
+														alert('It worked!');
+													}// End success
+													
+											   });// End ajax
+												
+											}// End success
+											
+									   });// End ajax
+							
+									}// End success
+									
+								});// End ajax
+								
+							} else {
+							
+								// Sweet, we already have the locks, lets continue
+								var arr_linking_screen = new Array();
+								main_form.find('input, select').each(function() {
+									if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
+										arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+									} else {
+										arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
+									}
+								});// End each
+								
+								// Serialize this crazy stuff
+								var linking_data = arr_linking_screen.join('&');	
+								var form_action = main_form.attr('action');
+								$.ajax({
+									url: form_action,
+									data: linking_data,
+									type: 'POST',
+									error: function() {
+										alert('You must be logged in to MySource Matrix in order to delete this asset.');
+										return;
+									},
+									success: function(html){
+										alert('It worked!');
+									}// End success
+									
+							   });// End ajax
+							
+							}// End else
+									
 							return;
 							
-/*							var link_path = $(html).find("img[alt='Show in Asset Map']").attr('onclick');
-							link_path = link_path.toString().split('asset_locator_start(');
-							link_path = link_path[1].toString().split('"');
-							link_path = link_path[1].toString().split('~');
-							link_path = link_path[0].toString().split('|');
-							// Modify our array
-							var arr_xml = new Array();
-							var x;
-							for (x in link_path) {
-								arr_xml.push('<command action="get assets"><asset assetid="' + link_path[x] + '" start="0" limit="150" linkid="10" /></command>');
-							}
-							alert(arr_xml.join('\n'));
-*/						}// End success
-					});
-					
-					// Construct our XML to send
-					var xml_get = '<command action="get assets"><asset assetid="' + item_id + '" start="0" limit="150" linkid="10" /></command>';
-					var xml_move = '<command action="move asset" to_parent_assetid="10" to_parent_pos="0"><asset assetid="47315"  linkid="81951"  parentid="2858" /></command>';
-					
-					// Since we don't really know anything about this asset, we need to look up some info for it.
-/*					$.ajax({
-						url: host_url,
-						type: 'POST',
-						processData: false,
-						data: xml_get,
-						contentType: "text/xml",
-						dataType: 'xml',
-						success: function(xml) {
-							// Create an array to hold attributes
-							var arr_current_item = new Array();
-							
-							// Check each asset that we find
-							$(xml).find('asset').each(function() {
-								// Only include asset tags with attributesp
-								if (parseInt($(this).attr('assetid')) > 0 && $(this).attr('assetid') === item_id) {
-									// Set some of our vars that will populate our asset map
-									arr_current_item.push(parseInt($(this).attr('assetid')));
-									arr_current_item.push(unescape($(this).attr('name')).replace(/\+/g, ' '));
-									arr_current_item.push($(this).attr('type_code'));
-									arr_current_item.push(parseInt($(this).attr('link_type')));
-									arr_current_item.push(parseInt($(this).attr('accessible')));
-									arr_current_item.push(parseInt($(this).attr('status')));
-									arr_current_item.push(parseInt($(this).attr('sort_order')));
-									arr_current_item.push($(this).attr('url'));
-									arr_current_item.push($(this).attr('web_path'));
-									arr_current_item.push(parseInt($(this).attr('num_kids')));
-									arr_current_item.push(parseInt($(this).attr('linkid')));
-								
-									// Lets see what is inside
-									alert(arr_current_item.join('\n'));
-								
-								}// End if
-							
-							});// End each
-							
 						}// End success
-						
+
 					});// End ajax
-*/					
+					
 				}// End else
 			
 				if (defaults.removeParent) {

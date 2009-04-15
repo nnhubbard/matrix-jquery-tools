@@ -460,7 +460,7 @@ $.fn.matrixDelete = function (options) {
 		
 		// Grab asset info
 		var itemDesc = obj.attr('rel'); 
-		var item_id = obj.attr('id'); 
+		var item_id = obj.attr('id').replace(/[^0-9]/g, ''); 
 		
 		// Remove simple edit url addition for links
 		if (!defaults.simpleEdit) {
@@ -501,11 +501,10 @@ $.fn.matrixDelete = function (options) {
 				} else {
 					// Looks like we are going to run this straight through the server, no triggers! Hooray!
 					// Find out what site we are at
-					var proto = location.protocol;
-					var site = location.host;
-					var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
-					var path_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=contents';
-					var linking_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
+					var site_url = location.protocol + '//' + location.host;
+					var host_url = site_url + '?SQ_ACTION=asset_map_request';
+					var hippo_url = site_url + '?SQ_ACTION=hipo';
+					var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
 					var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
 					
 					// Find current asset path and stuff
@@ -580,8 +579,25 @@ $.fn.matrixDelete = function (options) {
 													},
 													success: function(hippo){
 														hippo = '<div>' + hippo + '</div>';
-														var submitted_hippo = $('#main_form', hippo);
-														alert($('html', hippo).html());
+														var submitted_hippo = $(hippo).html();
+														var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
+														var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
+														var submitted_hippo_url = hippo_url + submitted_hippo[0];
+														
+														$.ajax({
+															url: submitted_hippo_url,
+															type: 'POST',
+															error: function() {
+																alert(global_warning);
+																return;
+															},
+															success: function () {
+																
+																submit_hippo(submitted_hippo_url);	
+															}
+															
+													   });// End ajax
+														
 													}// End success
 													
 											   });// End ajax
@@ -617,9 +633,7 @@ $.fn.matrixDelete = function (options) {
 										alert(global_warning);
 										return;
 									},
-									success: function(html){
-										alert('It worked!');
-									}// End success
+									success: submit_hippo
 									
 							   });// End ajax
 							
@@ -875,3 +889,52 @@ $.fn.matrixEdit = function (options) {
 
   
 })(jQuery);
+
+/**
+* Function to check the progress of a hippo job  
+*/
+function progress(percent_done, submitted_hippo_url) {
+	if (percent_done >= 100 || isNaN(percent_done)) {
+		return;	
+	} else {
+		$.ajax({
+			url: submitted_hippo_url,
+			type: 'POST'
+		});// End ajax
+		// Call our function again until we find 100
+		submit_hippo(submitted_hippo_url);
+	}// End else
+	
+}// End progress
+
+/**
+* Function to submit a hippo job using the hippo url that is passed  
+*/
+function submit_hippo(submitted_hippo_url) {
+	
+	$.ajax({
+		url: submitted_hippo_url,
+		type: 'GET',
+		success: function(data){
+			var percent_done = parseInt($('.sq-hipo-header-progress-bar-percent', data).text().replace(/[^0-9]/g, ''));
+			
+			progress(percent_done, submitted_hippo_url);
+			
+		}// End success
+		
+	});// End ajax
+	
+}// End submit_hippo
+
+/**
+* Function to get the locks on an asset screen
+*/
+function get_locks(item_id, item_screen) {
+	// Find out what site we are at
+	var site_url = location.protocol + '//' + location.host;
+	var host_url = site_url + '?SQ_ACTION=asset_map_request';
+	var hippo_url = site_url + '?SQ_ACTION=hipo';
+	var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=' + item_screen;
+	var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
+	
+}// End get_locks

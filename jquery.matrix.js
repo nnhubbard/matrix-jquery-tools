@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-14-2009)
+* version: 0.3 (APR-15-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -460,7 +460,9 @@ $.fn.matrixDelete = function (options) {
 		
 		// Grab asset info
 		var itemDesc = obj.attr('rel'); 
-		var item_id = obj.attr('id').replace(/[^0-9]/g, ''); 
+		var item_id = obj.attr('id').replace(/[^0-9]/g, '');
+		// What screen should we load?
+		var item_screen = 'linking';
 		
 		// Remove simple edit url addition for links
 		if (!defaults.simpleEdit) {
@@ -500,150 +502,7 @@ $.fn.matrixDelete = function (options) {
 					});// End ajax
 				} else {
 					// Looks like we are going to run this straight through the server, no triggers! Hooray!
-					// Find out what site we are at
-					var site_url = location.protocol + '//' + location.host;
-					var host_url = site_url + '?SQ_ACTION=asset_map_request';
-					var hippo_url = site_url + '?SQ_ACTION=hipo';
-					var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
-					var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
-					
-					// Find current asset path and stuff
-					$.ajax({
-						url: linking_url,
-						type: 'GET',
-						error: function() {
-							alert(global_warning);
-							return;
-						},
-						success: function(html){
-							// Silly jQuery bug, lets wrap the entire html in a div
-							html = '<div>' + html + '</div>';
-							// Get our form info
-							var main_form = $('#main_form', html);
-							var form_action = main_form.attr('action');
-							
-							// We should check if we already have the locks
-							if (main_form.find("input[value='Acquire Lock(s)']")) {
-								var arr_current_item = new Array();
-								main_form.find('input').each(function() {
-									if ($(this).attr('name') == 'sq_lock_acquire') {
-										arr_current_item.push($(this).attr('name') + '=1');	
-									} else {
-										arr_current_item.push($(this).attr('name') + '=' + $(this).val());	
-									}
-								});
-								// Serialize this crazy stuff
-								var linking_data = arr_current_item.join('&');	
-								// Lets check and see if we need to get locks
-								$.ajax({
-									url: form_action,
-									data: linking_data,
-									type: 'POST',
-									error: function() {
-										alert(global_warning);
-										return;
-									},
-									success: function(html){
-										
-										$.ajax({
-											url: linking_url,
-											type: 'GET',
-											error: function() {
-												alert(global_warning);
-												return;
-											},
-											success: function(response){
-												response = '<div>' + response + '</div>';
-												var main_form_hippo = $('#main_form', response);
-												// Submit the hippo
-												// Sweet, we already have the locks, lets continue
-												var arr_linking_screen = new Array();
-												main_form_hippo.find('input, select').each(function() {
-													if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
-														arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
-													} else {
-														arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-													}
-												});// End each
-												
-												// Serialize this crazy stuff
-												var linking_data = arr_linking_screen.join('&');	
-												var form_action = main_form.attr('action');
-												$.ajax({
-													url: form_action,
-													data: linking_data,
-													type: 'POST',
-													error: function() {
-														alert(global_warning);
-														return;
-													},
-													success: function(hippo){
-														hippo = '<div>' + hippo + '</div>';
-														var submitted_hippo = $(hippo).html();
-														var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
-														var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
-														var submitted_hippo_url = hippo_url + submitted_hippo[0];
-														
-														$.ajax({
-															url: submitted_hippo_url,
-															type: 'POST',
-															error: function() {
-																alert(global_warning);
-																return;
-															},
-															success: function () {
-																
-																submit_hippo(submitted_hippo_url);	
-															}
-															
-													   });// End ajax
-														
-													}// End success
-													
-											   });// End ajax
-												
-											}// End success
-											
-									   });// End ajax
-							
-									}// End success
-									
-								});// End ajax
-								
-							} else {
-							
-								// Sweet, we already have the locks, lets continue
-								var arr_linking_screen = new Array();
-								main_form.find('input, select').each(function() {
-									if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
-										arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
-									} else {
-										arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-									}
-								});// End each
-								
-								// Serialize this crazy stuff
-								var linking_data = arr_linking_screen.join('&');	
-								var form_action = main_form.attr('action');
-								$.ajax({
-									url: form_action,
-									data: linking_data,
-									type: 'POST',
-									error: function() {
-										alert(global_warning);
-										return;
-									},
-									success: submit_hippo
-									
-							   });// End ajax
-							
-							}// End else
-									
-							return;
-							
-						}// End success
-
-					});// End ajax
+					get_locks(item_id, item_screen);
 					
 				}// End else
 			
@@ -934,7 +793,145 @@ function get_locks(item_id, item_screen) {
 	var site_url = location.protocol + '//' + location.host;
 	var host_url = site_url + '?SQ_ACTION=asset_map_request';
 	var hippo_url = site_url + '?SQ_ACTION=hipo';
-	var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=' + item_screen;
+	var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
 	var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
+	
+	// Find current asset path and stuff
+	$.ajax({
+		url: linking_url,
+		type: 'GET',
+		error: function() {
+			alert(global_warning);
+			return;
+		},
+		success: function(html){
+			// Silly jQuery bug, lets wrap the entire html in a div
+			html = '<div>' + html + '</div>';
+			// Get our form info
+			var main_form = $('#main_form', html);
+			var form_action = main_form.attr('action');
+			
+			// We should check if we already have the locks
+			if (main_form.find("input[value='Acquire Lock(s)']")) {
+				var arr_current_item = new Array();
+				main_form.find('input').each(function() {
+					if ($(this).attr('name') == 'sq_lock_acquire') {
+						arr_current_item.push($(this).attr('name') + '=1');	
+					} else {
+						arr_current_item.push($(this).attr('name') + '=' + $(this).val());	
+					}
+				});
+				// Serialize this crazy stuff
+				var linking_data = arr_current_item.join('&');	
+				// Lets check and see if we need to get locks
+				$.ajax({
+					url: form_action,
+					data: linking_data,
+					type: 'POST',
+					error: function() {
+						alert(global_warning);
+						return;
+					},
+					success: function(html){
+						
+						$.ajax({
+							url: linking_url,
+							type: 'GET',
+							error: function() {
+								alert(global_warning);
+								return;
+							},
+							success: function(response){
+								response = '<div>' + response + '</div>';
+								var main_form_hippo = $('#main_form', response);
+								// Submit the hippo
+								// Sweet, we already have the locks, lets continue
+								var arr_linking_screen = new Array();
+								main_form_hippo.find('input, select').each(function() {
+									if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
+										arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+									} else {
+										arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
+									}
+								});// End each
+								
+								// Serialize this crazy stuff
+								var linking_data = arr_linking_screen.join('&');	
+								var form_action = main_form.attr('action');
+								$.ajax({
+									url: form_action,
+									data: linking_data,
+									type: 'POST',
+									error: function() {
+										alert(global_warning);
+										return;
+									},
+									success: function(hippo){
+										hippo = '<div>' + hippo + '</div>';
+										var submitted_hippo = $(hippo).html();
+										var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
+										var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
+										var submitted_hippo_url = hippo_url + submitted_hippo[0];
+										
+										$.ajax({
+											url: submitted_hippo_url,
+											type: 'POST',
+											error: function() {
+												alert(global_warning);
+												return;
+											},
+											success: function () {
+												
+												submit_hippo(submitted_hippo_url);	
+											}
+											
+									   });// End ajax
+										
+									}// End success
+									
+							   });// End ajax
+								
+							}// End success
+							
+					   });// End ajax
+			
+					}// End success
+					
+				});// End ajax
+				
+			} else {
+			
+				// Sweet, we already have the locks, lets continue
+				var arr_linking_screen = new Array();
+				main_form.find('input, select').each(function() {
+					if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
+						arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+					} else {
+						arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
+					}
+				});// End each
+				
+				// Serialize this crazy stuff
+				var linking_data = arr_linking_screen.join('&');	
+				var form_action = main_form.attr('action');
+				$.ajax({
+					url: form_action,
+					data: linking_data,
+					type: 'POST',
+					error: function() {
+						alert(global_warning);
+						return;
+					},
+					success: submit_hippo
+					
+			   });// End ajax
+			
+			}// End else
+					
+			return;
+			
+		}// End success
+	
+	});// End ajax
 	
 }// End get_locks

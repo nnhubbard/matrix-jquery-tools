@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-08-2009)
+* version: 0.3 (APR-14-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -614,7 +614,7 @@ $.fn.matrixDelete = function (options) {
 									data: linking_data,
 									type: 'POST',
 									error: function() {
-										alert('You must be logged in to MySource Matrix in order to delete this asset.');
+										alert(global_warning);
 										return;
 									},
 									success: function(html){

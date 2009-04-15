@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-08-2009)
+* version: 0.3 (APR-14-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -506,13 +506,14 @@ $.fn.matrixDelete = function (options) {
 					var host_url = proto + '//' + site + '?SQ_ACTION=asset_map_request';
 					var path_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=contents';
 					var linking_url = proto + '//' + site + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
+					var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
 					
 					// Find current asset path and stuff
 					$.ajax({
 						url: linking_url,
 						type: 'GET',
 						error: function() {
-							alert('You must be logged in to MySource Matrix in order to delete this asset.');
+							alert(global_warning);
 							return;
 						},
 						success: function(html){
@@ -540,7 +541,7 @@ $.fn.matrixDelete = function (options) {
 									data: linking_data,
 									type: 'POST',
 									error: function() {
-										alert('Could not aquire locks! You must be logged into MySource Matrix!');
+										alert(global_warning);
 										return;
 									},
 									success: function(html){
@@ -549,7 +550,7 @@ $.fn.matrixDelete = function (options) {
 											url: linking_url,
 											type: 'GET',
 											error: function() {
-												alert('You must be logged in to MySource Matrix in order to delete this asset.');
+												alert(global_warning);
 												return;
 											},
 											success: function(response){
@@ -574,11 +575,13 @@ $.fn.matrixDelete = function (options) {
 													data: linking_data,
 													type: 'POST',
 													error: function() {
-														alert('You must be logged in to MySource Matrix in order to delete this asset.');
+														alert(global_warning);
 														return;
 													},
-													success: function(html){
-														alert('It worked!');
+													success: function(hippo){
+														hippo = '<div>' + hippo + '</div>';
+														var submitted_hippo = $('#main_form', hippo);
+														alert($('html', hippo).html());
 													}// End success
 													
 											   });// End ajax
@@ -611,7 +614,7 @@ $.fn.matrixDelete = function (options) {
 									data: linking_data,
 									type: 'POST',
 									error: function() {
-										alert('You must be logged in to MySource Matrix in order to delete this asset.');
+										alert(global_warning);
 										return;
 									},
 									success: function(html){

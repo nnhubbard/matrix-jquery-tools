@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-15-2009)
+* version: 0.3 (APR-16-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -86,7 +86,7 @@ $.fn.matrixMap = function (options) {
 					if (asset_link_type === 2) {
 						// Type 2 link
 						var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
-						var asset_image = type_2_image + asset_image;
+						asset_image = type_2_image + asset_image;
 					} else {
 						// Type 1 link
 						var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
@@ -288,8 +288,7 @@ $.fn.matrixForm = function (options) {
 									function () {
 										$(this).html('');
 									});
-								},
-								5000
+								},5000
 								
 							);// End timout
 							
@@ -474,7 +473,7 @@ $.fn.matrixDelete = function (options) {
 		
 		// Add our multiple delete checkbox
 		if (defaults.multiple) {
-			var deleteCheckbox = '<input class="' + defaults.checkboxClass + '" type="checkbox" value="' + itemHref + '" />';
+			var deleteCheckbox = '<input id="a' + item_id +'" class="' + defaults.checkboxClass + '" type="checkbox" value="' + itemHref + '" />';
 			if (defaults.checkboxAfter) {
 				obj.after(deleteCheckbox);
 			} else {
@@ -485,7 +484,7 @@ $.fn.matrixDelete = function (options) {
 		
 		obj.click(function () { 
 			// Be nice with our wording
-			if (!itemDesc == '') {
+			if (!itemDesc === '') {
 				var question = confirm('Are you sure you want to delete "' + itemDesc + '"?');
 			} else {
 				var question = confirm('Are you sure you want to delete this?');
@@ -541,12 +540,18 @@ $.fn.matrixDelete = function (options) {
 					$('input:checked').each(function () {
 						// Run our custom callback
 						defaults.beforeComplete.apply($(this), []);
-						
+					
+					if (defaults.trigger) {
 						// Loop through each match and run a POST for that URL
 						$.ajax({
 							type: 'POST',
 							url: this.value + defaults.urlSuffix
 						});// End ajax
+					} else {
+						// Looks like we are going to run this straight through the server, no triggers! Hooray!
+						get_locks($(this).attr('id').replace(/[^0-9]/g, ''), item_screen);
+						
+					}// End else
 				
 						// Run our custom callback
 						defaults.onComplete.apply($(this), []);
@@ -610,7 +615,7 @@ $.fn.matrixClone = function (options) {
 				
 				// Check our duplication limit
 				if (dulicateCheck <= defaults.limit) {
-					if (!itemDesc == '') {
+					if (!itemDesc === '') {
 						var cloneAnswer = confirm('Are you sure you want duplicate "' + itemDesc + '" ' + dulicateCheck + ' times?');
 					} else {
 						var cloneAnswer = confirm('Are you sure you want duplicate this ' + dulicateCheck + ' times?');
@@ -659,20 +664,25 @@ $.fn.matrixClone = function (options) {
 $.fn.matrixStatus = function (options) {
 	var defaults = {
 		urlSuffix: '?action=live',
+		trigger: true,
 		beforeComplete: function () {},
 		onComplete: function () {}
 	};
 
 	var options = $.extend(defaults, options);
+	
+	// What screen should we load?
+	var item_screen = 'details';
 
 	return this.each(function () {
 		var obj = $(this);
 		var itemDesc = obj.attr('rel');
 		var itemHref = obj.attr('href');
+		var item_id = obj.attr('id').replace(/[^0-9]/g, '');
 		obj.click(function () {
 			
 			// Make sure we want to change status
-			if (!itemDesc == '') {
+			if (!itemDesc === '') {
 				var question = confirm('Are you sure you want to change the status of "'+itemDesc+'"?');
 			} else {
 				var question = confirm('Are you sure you want to change the status?');
@@ -683,10 +693,16 @@ $.fn.matrixStatus = function (options) {
 				// Run our custom callback
 				defaults.beforeComplete.apply(obj, []);
 		  
-				$.ajax({
-					type: 'POST',
-					url: itemHref + defaults.urlSuffix
-				});// End ajax
+				if (defaults.trigger) {
+					$.ajax({
+						type: 'POST',
+						url: itemHref + defaults.urlSuffix
+					});// End ajax
+				} else {
+					// No triggers!  Heck yes!
+					get_locks(item_id, item_screen);
+					
+				}// End else
 		  
 				// Run our custom callback
 				defaults.onComplete.apply(obj, []);
@@ -750,6 +766,19 @@ $.fn.matrixEdit = function (options) {
 })(jQuery);
 
 /**
+* Function that returns an ajax error
+*/
+function ajax_error(xhr, ajaxOptions, errorThrown) {
+	if (xhr.status === 302) {
+		alert('You do not have permissions to this asset.  Please log into MySource Matrix');
+	} else {
+		alert('You must be logged into MySource Matrix in order to complete this action.');
+	}
+	console.log(errorThrown);
+}// End ajax_error
+
+
+/**
 * Function to check the progress of a hippo job  
 */
 function progress(percent_done, submitted_hippo_url) {
@@ -760,8 +789,10 @@ function progress(percent_done, submitted_hippo_url) {
 			url: submitted_hippo_url,
 			type: 'POST'
 		});// End ajax
+		
 		// Call our function again until we find 100
 		submit_hippo(submitted_hippo_url);
+		
 	}// End else
 	
 }// End progress
@@ -785,6 +816,75 @@ function submit_hippo(submitted_hippo_url) {
 	
 }// End submit_hippo
 
+
+/**
+* Function that gets data and posts to the linking screen of an asset
+*/
+function details_screen(screen_url, main_form, hippo_url) {
+	
+}// End details_screen
+
+
+/**
+* Function that gets data and posts to the linking screen of an asset
+*/
+function linking_screen(screen_url, main_form, hippo_url) {
+	
+	$.ajax({
+		url: screen_url,
+		type: 'GET',
+		error: ajax_error,
+		success: function(response){
+			response = '<div>' + response + '</div>';
+			var main_form_hippo = $('#main_form', response);
+			// Submit the hippo
+			// Sweet, we already have the locks, lets continue
+			var arr_linking_screen = new Array();
+			main_form_hippo.find('input, select').each(function() {
+				if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
+					arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+				} else {
+					arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
+				}
+			});// End each
+			
+			// Serialize this crazy stuff
+			var linking_data = arr_linking_screen.join('&');	
+			var form_action = main_form.attr('action');
+			$.ajax({
+				url: form_action,
+				data: linking_data,
+				type: 'POST',
+				error: ajax_error,
+				success: function(hippo){
+					hippo = '<div>' + hippo + '</div>';
+					var submitted_hippo = $(hippo).html();
+					var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
+					var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
+					var submitted_hippo_url = hippo_url + submitted_hippo[0];
+					
+					$.ajax({
+						url: submitted_hippo_url,
+						type: 'POST',
+						error: ajax_error,
+						success: function () {
+							
+							submit_hippo(submitted_hippo_url);	
+						}
+						
+				   });// End ajax
+					
+				}// End success
+				
+		   });// End ajax
+			
+		}// End success
+		
+   });// End ajax
+	
+}// End linking_screen
+
+
 /**
 * Function to get the locks on an asset screen
 */
@@ -793,17 +893,13 @@ function get_locks(item_id, item_screen) {
 	var site_url = location.protocol + '//' + location.host;
 	var host_url = site_url + '?SQ_ACTION=asset_map_request';
 	var hippo_url = site_url + '?SQ_ACTION=hipo';
-	var linking_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=linking';
-	var global_warning = 'You must be logged into MySource Matrix in order to complete this action.';
+	var screen_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id + '&asset_ei_screen=' + item_screen;
 	
 	// Find current asset path and stuff
 	$.ajax({
-		url: linking_url,
+		url: screen_url,
 		type: 'GET',
-		error: function() {
-			alert(global_warning);
-			return;
-		},
+		error: ajax_error,
 		success: function(html){
 			// Silly jQuery bug, lets wrap the entire html in a div
 			html = '<div>' + html + '</div>';
@@ -828,105 +924,22 @@ function get_locks(item_id, item_screen) {
 					url: form_action,
 					data: linking_data,
 					type: 'POST',
-					error: function() {
-						alert(global_warning);
-						return;
-					},
+					error: ajax_error,
 					success: function(html){
 						
-						$.ajax({
-							url: linking_url,
-							type: 'GET',
-							error: function() {
-								alert(global_warning);
-								return;
-							},
-							success: function(response){
-								response = '<div>' + response + '</div>';
-								var main_form_hippo = $('#main_form', response);
-								// Submit the hippo
-								// Sweet, we already have the locks, lets continue
-								var arr_linking_screen = new Array();
-								main_form_hippo.find('input, select').each(function() {
-									if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
-										arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
-									} else {
-										arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-									}
-								});// End each
-								
-								// Serialize this crazy stuff
-								var linking_data = arr_linking_screen.join('&');	
-								var form_action = main_form.attr('action');
-								$.ajax({
-									url: form_action,
-									data: linking_data,
-									type: 'POST',
-									error: function() {
-										alert(global_warning);
-										return;
-									},
-									success: function(hippo){
-										hippo = '<div>' + hippo + '</div>';
-										var submitted_hippo = $(hippo).html();
-										var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
-										var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
-										var submitted_hippo_url = hippo_url + submitted_hippo[0];
-										
-										$.ajax({
-											url: submitted_hippo_url,
-											type: 'POST',
-											error: function() {
-												alert(global_warning);
-												return;
-											},
-											success: function () {
-												
-												submit_hippo(submitted_hippo_url);	
-											}
-											
-									   });// End ajax
-										
-									}// End success
-									
-							   });// End ajax
-								
-							}// End success
-							
-					   });// End ajax
+						if (item_screen === 'linking') {
+							// Run our linking function
+							linking_screen(screen_url, main_form, hippo_url);
+						} else if (item_screen === 'details') {
+							// Run our details function
+							details_screen(screen_url, main_form, hippo_url);
+						}
 			
 					}// End success
 					
 				});// End ajax
 				
-			} else {
-			
-				// Sweet, we already have the locks, lets continue
-				var arr_linking_screen = new Array();
-				main_form.find('input, select').each(function() {
-					if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
-						arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
-					} else {
-						arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-					}
-				});// End each
-				
-				// Serialize this crazy stuff
-				var linking_data = arr_linking_screen.join('&');	
-				var form_action = main_form.attr('action');
-				$.ajax({
-					url: form_action,
-					data: linking_data,
-					type: 'POST',
-					error: function() {
-						alert(global_warning);
-						return;
-					},
-					success: submit_hippo
-					
-			   });// End ajax
-			
-			}// End else
+			}// End if
 					
 			return;
 			

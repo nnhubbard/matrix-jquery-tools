@@ -443,6 +443,7 @@ $.fn.matrixDelete = function (options) {
 		target: 'body',
 		simpleEdit: false,
 		removeParent: false,
+		ajaxStatus: false,
 		beforeComplete: function () {},
 		onComplete: function () {}
 	};
@@ -553,8 +554,11 @@ $.fn.matrixDelete = function (options) {
 							
 						}// End else
 				
-						// Run our custom callback
-						defaults.onComplete.apply($(this), []);
+						
+						if (defaults.trigger) {
+							// Run our custom callback
+							defaults.onComplete.apply($(this), []);
+						}
 			  
 					});// End each
 					
@@ -767,6 +771,12 @@ $.fn.matrixEdit = function (options) {
 
 /**
 * Function that returns an ajax error
+*
+* @param string		xhr				The response code that we get back
+* @param string		ajaxOptions		Extra options
+* @param string		errorThrown		The error the is thrown
+*
+* @access public
 */
 function ajax_error(xhr, ajaxOptions, errorThrown) {
 	if (xhr.status === 302) {
@@ -779,7 +789,13 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 
 
 /**
-* Function to check the progress of a hippo job  
+* Function to check the progress of a hippo job 
+*
+* @param string		item_id				The id of the asset we are getting locks for
+* @param string		percent_done		The percentage of progress for our hippo
+* @param string		submitted_hippo_url	The url of our hippo job
+*
+* @access public
 */
 function progress(item_id, percent_done, submitted_hippo_url) {
 	if (percent_done >= 100 || isNaN(percent_done)) {
@@ -799,7 +815,12 @@ function progress(item_id, percent_done, submitted_hippo_url) {
 }// End progress
 
 /**
-* Function to submit a hippo job using the hippo url that is passed  
+* Function to submit a hippo job using the hippo url that is passed
+*
+* @param string		item_id				The id of the asset we are getting locks for
+* @param string		submitted_hippo_url	The url of our hippo job
+*
+* @access public
 */
 function submit_hippo(item_id, submitted_hippo_url) {
 	
@@ -822,6 +843,11 @@ function submit_hippo(item_id, submitted_hippo_url) {
 
 /**
 * Function will update the status when each ajax call is run
+*
+* @param string		item_id			The id of the asset we are getting locks for
+* @param string		status_message	The status message that we are sending
+*
+* @access public
 */
 function status(item_id, status_message) {
 	// We need to set where out status will be
@@ -833,6 +859,13 @@ function status(item_id, status_message) {
 
 /**
 * Function that gets data and posts to the linking screen of an asset
+*
+* @param string		item_id		The id of the asset we are getting locks for
+* @param string		screen_url	The url of the screen we are getting
+* @param object		main_form	jQuery selector of our main form
+* @param string		hippo_url	The url of the current hippo job
+*
+* @access public
 */
 function details_screen(item_id, screen_url, main_form, hippo_url) {
 	
@@ -841,6 +874,13 @@ function details_screen(item_id, screen_url, main_form, hippo_url) {
 
 /**
 * Function that gets data and posts to the linking screen of an asset
+* 
+* @param string		item_id		The id of the asset we are getting locks for
+* @param string		screen_url	The url of the screen we are getting
+* @param object		main_form	jQuery selector of our main form
+* @param string		hippo_url	The url of the current hippo job
+*
+* @access public
 */
 function linking_screen(item_id, screen_url, main_form, hippo_url) {
 	
@@ -912,6 +952,11 @@ function linking_screen(item_id, screen_url, main_form, hippo_url) {
 
 /**
 * Function to get the locks on an asset screen
+*
+* @param string		item_id		The id of the asset we are getting locks for
+* @param string		item_screen	The screen that we are to get from the backend
+*
+* @access public
 */
 function get_locks(item_id, item_screen) {
 	// Find out what site we are at

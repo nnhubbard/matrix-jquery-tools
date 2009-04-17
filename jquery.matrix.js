@@ -442,7 +442,6 @@ $.fn.matrixDelete = function (options) {
 		urlSuffix: '?action=delete',
 		target: 'body',
 		simpleEdit: false,
-		removeParent: false,
 		ajaxStatus: false,
 		beforeComplete: function () {},
 		onComplete: function () {}
@@ -463,6 +462,9 @@ $.fn.matrixDelete = function (options) {
 		var item_id = obj.attr('id');
 		// What screen should we load?
 		var item_screen = 'linking';
+		var ajax_status = defaults.ajaxStatus;
+		var complete = defaults.onComplete;
+		var asset_status = null;
 		
 		// Remove simple edit url addition for links
 		if (!defaults.simpleEdit) {
@@ -474,7 +476,7 @@ $.fn.matrixDelete = function (options) {
 		
 		// Add our multiple delete checkbox
 		if (defaults.multiple) {
-			var deleteCheckbox = '<input id="a' + item_id +'" class="' + defaults.checkboxClass + '" type="checkbox" value="' + itemHref + '" />';
+			var deleteCheckbox = '<input id="multi_' + item_id +'" class="' + defaults.checkboxClass + '" type="checkbox" value="' + itemHref + '" />';
 			if (defaults.checkboxAfter) {
 				obj.after(deleteCheckbox);
 			} else {
@@ -500,19 +502,15 @@ $.fn.matrixDelete = function (options) {
 						type: 'POST',
 						url: itemHref + defaults.urlSuffix
 					});// End ajax
+					
+					// Run our custom callback
+					defaults.onComplete.apply(obj, []);
+					
 				} else {
 					// Looks like we are going to run this straight through the server, no triggers! Hooray!
-					var ajax_status = defaults.ajaxStatus;
-					get_locks(item_id, item_screen, ajax_status);
+					get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj);
 					
 				}// End else
-			
-				if (defaults.removeParent) {
-					obj.parent().remove();
-				}// End if
-		  
-				// Run our custom callback
-				defaults.onComplete.apply(obj, []);
 		  
 			}// End if
 			
@@ -549,25 +547,18 @@ $.fn.matrixDelete = function (options) {
 								type: 'POST',
 								url: this.value + defaults.urlSuffix
 							});// End ajax
+							
+							// Run our custom callback
+							defaults.onComplete.apply($(this), []);
 						} else {
 							// Looks like we are going to run this straight through the server, no triggers! Hooray!
-							get_locks($(this).attr('id'), item_screen);
+							obj = $('input:checked');
+							get_locks($(this).attr('id'), item_screen, ajax_status, asset_status, complete, obj);
 							
 						}// End else
 				
-						
-						if (defaults.trigger) {
-							// Run our custom callback
-							defaults.onComplete.apply($(this), []);
-						}
-			  
 					});// End each
 					
-					// Check to see if we can remove parents
-					if (defaults.removeParent) {
-						$(this + ':checked').parent().remove();
-					}// End removeParent
-			  
 				}// End if (answerDelete)
 			
 			});// End click function
@@ -803,9 +794,11 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 *
 * @access public
 */
-function progress(item_id, percent_done, submitted_hippo_url, ajax_status) {
+function progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj) {
 	if (percent_done >= 100 || isNaN(percent_done)) {
 		$('#' + item_id).next('.ajax_status').remove();
+		// Run our onComplete callback
+		complete.apply(obj, []);
 		return;	
 	} else {
 		$.ajax({
@@ -814,7 +807,7 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status) {
 		});// End ajax
 		
 		// Call our function again until we find 100
-		submit_hippo(item_id, submitted_hippo_url, ajax_status);
+		submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj);
 		
 	}// End else
 	
@@ -829,7 +822,7 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status) {
 *
 * @access public
 */
-function submit_hippo(item_id, submitted_hippo_url, ajax_status) {
+function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) {
 	
 	$.ajax({
 		url: submitted_hippo_url,
@@ -839,7 +832,7 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status) {
 			var status_message = 'Hippo is at ' + percent_done +'%';
 			status(item_id, status_message, ajax_status)
 			
-			progress(item_id, percent_done, submitted_hippo_url, ajax_status);
+			progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj);
 			
 		}// End success
 		
@@ -879,6 +872,9 @@ function status(item_id, status_message, ajax_status) {
 * @access public
 */
 function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, asset_status) {
+	
+	// Work on this later
+	return;
 	
 	// Lets see what status means in numerical values
 	if (asset_status === 'Live') {
@@ -930,7 +926,7 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 *
 * @access public
 */
-function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status) {
+function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj) {
 	
 	$.ajax({
 		url: screen_url,
@@ -972,6 +968,12 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status) 
 					hippo = '<div>' + hippo + '</div>';
 					var submitted_hippo = $(hippo).html();
 					var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
+					// Check to see if we actually have a hippo
+					if (submitted_hippo[1] === undefined) {
+						var status_message = 'Hippo Error';
+						status(item_id, status_message, ajax_status)
+						return;	
+					}
 					var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
 					var submitted_hippo_url = hippo_url + submitted_hippo[0];
 					
@@ -981,7 +983,7 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status) 
 						error: ajax_error,
 						success: function () {
 							
-							submit_hippo(item_id, submitted_hippo_url, ajax_status);	
+							submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj);	
 						}
 						
 				   });// End ajax
@@ -1006,7 +1008,7 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status) 
 *
 * @access public
 */
-function get_locks(item_id, item_screen, ajax_status, asset_status) {
+function get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj) {
 	// Find out what site we are at
 	var site_url = location.protocol + '//' + location.host;
 	var host_url = site_url + '?SQ_ACTION=asset_map_request';
@@ -1055,7 +1057,7 @@ function get_locks(item_id, item_screen, ajax_status, asset_status) {
 						
 						if (item_screen === 'linking') {
 							// Run our linking function
-							linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status);
+							linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj);
 						} else if (item_screen === 'details') {
 							// Run our details function
 							details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, asset_status);

@@ -4,6 +4,9 @@ Copyright 2009 Nicholas Hubbard
 This file provides a description for each jquery.matrix plugin.
 NOTE: Most plugins require some sort of configuration within MySource Matrix in order to talk to the server.  Please take a look at the tutorials at www.zedsaid.com/projects
 
+matrixMap:
+This plugin allows you to browse the Matrix Asset Map using jQuery.
+
 matrixForm:
 This plugin will allow asset builders to be submitted using ajax, making creation of assets quick and easy.
 

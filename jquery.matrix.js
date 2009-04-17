@@ -552,7 +552,7 @@ $.fn.matrixDelete = function (options) {
 							defaults.onComplete.apply($(this), []);
 						} else {
 							// Looks like we are going to run this straight through the server, no triggers! Hooray!
-							obj = $('input:checked');
+							obj = $(this);
 							get_locks($(this).attr('id'), item_screen, ajax_status, asset_status, complete, obj);
 							
 						}// End else
@@ -791,6 +791,8 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 * @param string		percent_done		The percentage of progress for our hippo
 * @param string		submitted_hippo_url	The url of our hippo job
 * @param boolean	ajax_status			True or False if we want to show the status
+* @param function	complete			The functin that we use for our callback
+* @param object		obj					The jQuery object that we pass to our callback
 *
 * @access public
 */
@@ -819,6 +821,8 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status, compl
 * @param string		item_id				The id of the asset we are getting locks for
 * @param string		submitted_hippo_url	The url of our hippo job
 * @param boolean	ajax_status			True or False if we want to show the status
+* @param function	complete			The functin that we use for our callback
+* @param object		obj					The jQuery object that we pass to our callback
 *
 * @access public
 */
@@ -923,6 +927,8 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @param object		main_form	jQuery selector of our main form
 * @param string		hippo_url	The url of the current hippo job
 * @param boolean	ajax_status	True or False if we want to show the status
+* @param function	complete			The functin that we use for our callback
+* @param object		obj					The jQuery object that we pass to our callback
 *
 * @access public
 */
@@ -1005,6 +1011,8 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @param string		item_id		The id of the asset we are getting locks for
 * @param string		item_screen	The screen that we are to get from the backend
 * @param boolean	ajax_status	True or False if we want to show the status
+* @param function	complete			The functin that we use for our callback
+* @param object		obj					The jQuery object that we pass to our callback
 *
 * @access public
 */

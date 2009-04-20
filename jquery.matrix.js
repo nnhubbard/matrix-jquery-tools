@@ -1102,7 +1102,6 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 	
 	// Find out what site we are at
 	var site_url = location.protocol + '//' + location.host;
-	var host_url = site_url + '?SQ_ACTION=asset_map_request';
 	var hippo_url = site_url + '?SQ_ACTION=hipo';
 	var screen_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + clean_id(item_id) + '&asset_ei_screen=' + item_screen;
 	
@@ -1172,6 +1171,9 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 				});// End ajax
 				
 			}// End if
+			
+			var status_message = 'Error getting locks';
+			status(item_id, status_message, ajax_status);
 					
 			return;
 			

@@ -507,6 +507,7 @@ $.fn.matrixDelete = function (options) {
 					defaults.onComplete.apply(obj, []);
 					
 				} else {
+					
 					// Looks like we are going to run this straight through the server, no triggers! Hooray!
 					get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj);
 					
@@ -533,6 +534,11 @@ $.fn.matrixDelete = function (options) {
 					var deleteWord = 'items';
 				}// End if
 				
+				if (deleteCount === 0) {
+					alert('Please select one or more assets to delete.');
+					return;	
+				}
+				
 				var answerDelete = confirm('You are about to delete ' + deleteCount + ' ' + deleteWord + ', are you sure you want to do this?'); 
 				
 				// If the user confirms, continue
@@ -551,8 +557,10 @@ $.fn.matrixDelete = function (options) {
 							// Run our custom callback
 							defaults.onComplete.apply($(this), []);
 						} else {
-							// Looks like we are going to run this straight through the server, no triggers! Hooray!
+							// Set our correct object
 							obj = $(this);
+							
+							// Looks like we are going to run this straight through the server, no triggers! Hooray!
 							get_locks($(this).attr('id'), item_screen, ajax_status, asset_status, complete, obj);
 							
 						}// End else
@@ -676,7 +684,11 @@ $.fn.matrixStatus = function (options) {
 		var obj = $(this);
 		var itemDesc = obj.attr('rel');
 		var itemHref = obj.attr('href');
-		var item_id = obj.attr('id').replace(/[^0-9]/g, '');
+		var item_id = obj.attr('id');
+		var ajax_status = defaults.ajaxStatus;
+		var asset_status = defaults.assetStatus;
+		var complete = defaults.onComplete;
+		
 		obj.click(function () {
 			
 			// Make sure we want to change status
@@ -696,16 +708,14 @@ $.fn.matrixStatus = function (options) {
 						type: 'POST',
 						url: itemHref + defaults.urlSuffix
 					});// End ajax
+					
+					// Run our custom callback
+					defaults.onComplete.apply(obj, []);
 				} else {
 					// No triggers!  Heck yes!
-					var ajax_status = defaults.ajaxStatus;
-					var asset_status = defaults.assetStatus;
-					get_locks(item_id, item_screen, ajax_status, asset_status);
+					get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj);
 					
 				}// End else
-		  
-				// Run our custom callback
-				defaults.onComplete.apply(obj, []);
 		  
 			}// End if
 			
@@ -765,6 +775,36 @@ $.fn.matrixEdit = function (options) {
   
 })(jQuery);
 
+
+/**
+* Function that cleans the input leaving just the asset id
+*
+* @param string		item_id				The id of the asset we are getting locks for
+*
+* @access public
+*/
+function clean_id(item_id) {
+	return item_id.replace(/[^0-9]/g, '');
+}// End clean_id
+
+
+/**
+* Function to check for any errors with the asset id
+*
+* @param string		item_id				The id of the asset we are getting locks for
+*
+* @access public
+*/
+function check_errors(item_id) {
+	// Everything depends on the ID, so we need to check that we have it
+	var item_id = clean_id(item_id);
+	if (isNaN(item_id) || item_id === '' || item_id === undefined) {
+		alert('The asset ID that was passed does not appear to be a number, please check the ID you are passing.');
+		return true;
+	}
+}// End check_errors
+
+
 /**
 * Function that returns an ajax error
 *
@@ -798,11 +838,16 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 */
 function progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj) {
 	if (percent_done >= 100 || isNaN(percent_done)) {
+		
+		// Remove ajax_status one we are finished with the hippo
 		$('#' + item_id).next('.ajax_status').remove();
+		
 		// Run our onComplete callback
 		complete.apply(obj, []);
+		
 		return;	
 	} else {
+		
 		$.ajax({
 			url: submitted_hippo_url,
 			type: 'POST'
@@ -827,7 +872,6 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status, compl
 * @access public
 */
 function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) {
-	
 	$.ajax({
 		url: submitted_hippo_url,
 		type: 'GET',
@@ -836,6 +880,7 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) 
 			var status_message = 'Hippo is at ' + percent_done +'%';
 			status(item_id, status_message, ajax_status)
 			
+			// Run our function that checks the hippo progress
 			progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj);
 			
 		}// End success
@@ -843,6 +888,68 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) 
 	});// End ajax
 	
 }// End submit_hippo
+
+
+function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, linking_data) {
+	
+	var status_message = 'Building data';
+	status(item_id, status_message, ajax_status);
+	
+	var form_action = main_form.attr('action');
+	$.ajax({
+		url: form_action,
+		data: linking_data,
+		type: 'POST',
+		error: ajax_error,
+		beforeSend: function() {
+			var status_message = 'Submitting hippo job';
+			status(item_id, status_message, ajax_status);
+		},
+		success: function(hippo){
+			
+			// What screen are we using
+			var current_screen = screen_url.split('asset_ei_screen=');
+			current_scrren = current_screen[1];
+			if (current_scrren === 'details') {
+				var status_message = 'Status changed successfully';
+				status(item_id, status_message, ajax_status);
+				// Run our onComplete callback
+				complete.apply(obj, []);
+				return;
+			}// End if
+	
+			hippo = '<div>' + hippo + '</div>';
+			var submitted_hippo = $(hippo).html();
+			
+			// Find our hippo URL
+			var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
+			// Check to see if we actually have a hippo
+			if (submitted_hippo[1] === undefined) {
+				var status_message = 'Hippo Error';
+				status(item_id, status_message, ajax_status);
+				return;	
+			}// End if
+			var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
+			var submitted_hippo_url = hippo_url + submitted_hippo[0];
+			
+			$.ajax({
+				url: submitted_hippo_url,
+				type: 'POST',
+				error: ajax_error,
+				success: function () {
+					
+					// Run our function to submit the hippo
+					submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj);	
+					
+				}// End success
+				
+		   });// End ajax
+			
+		}// End success
+		
+   });// End ajax
+	
+}// End process_hippo
 
 
 /**
@@ -859,6 +966,7 @@ function status(item_id, status_message, ajax_status) {
 		// We need to set where out status will be
 		$('#' + item_id).next('.ajax_status').remove();
 		$('#' + item_id).after('<span class="ajax_status">' + status_message + '</span>');
+		
 	}// End if
 	
 }// End details_screen
@@ -867,18 +975,18 @@ function status(item_id, status_message, ajax_status) {
 /**
 * Function that gets data and posts to the linking screen of an asset
 *
-* @param string		item_id		The id of the asset we are getting locks for
-* @param string		screen_url	The url of the screen we are getting
-* @param object		main_form	jQuery selector of our main form
-* @param string		hippo_url	The url of the current hippo job
-* @param boolean	ajax_status	True or False if we want to show the status
+* @param string		item_id			The id of the asset we are getting locks for
+* @param string		screen_url		The url of the screen we are getting
+* @param object		main_form		jQuery selector of our main form
+* @param string		hippo_url		The url of the current hippo job
+* @param boolean	ajax_status		True or False if we want to show the status
+* @param function	complete		The functin that we use for our callback
+* @param object		obj				The jQuery object that we pass to our callback
+* @param string		asset_status	The status that we are to set the asset to
 *
 * @access public
 */
-function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, asset_status) {
-	
-	// Work on this later
-	return;
+function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, asset_status) {
 	
 	// Lets see what status means in numerical values
 	if (asset_status === 'Live') {
@@ -895,22 +1003,28 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 		error: ajax_error,
 		beforeSend: function() {
 			var status_message = 'Getting details screen info';
-			status(item_id, status_message, ajax_status)
+			status(item_id, status_message, ajax_status);
 		},
 		success: function(response){
 			response = '<div>' + response + '</div>';
 			var main_form_hippo = $('#main_form', response);
 			// Submit the hippo
-			var arr_details_screen = new Array();
+			var arr_screen = new Array();
 			main_form_hippo.find('input, select').each(function() {
 				if ($(this).attr('id').indexOf('_change_status') !== -1 && this.tagName === 'SELECT') {
-					arr_details_screen.push($(this).attr('name') + '=' + asset_status);
+					arr_screen.push($(this).attr('name') + '=' + status_code);
 				} else {
-					//alert($(this).tagName);
-					//arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-				}
+					arr_screen.push($(this).attr('name') + '=' + $(this).val());
+					
+				}// End else
 				
 			});// End each
+			
+			// Serialize this crazy stuff
+			var linking_data = arr_screen.join('&');	
+			
+			// Start to process our hippo job
+			process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, linking_data);
 			
 		}// End success
 		
@@ -933,70 +1047,33 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @access public
 */
 function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj) {
-	
 	$.ajax({
 		url: screen_url,
 		type: 'GET',
 		error: ajax_error,
 		beforeSend: function() {
 			var status_message = 'Getting linking screen info';
-			status(item_id, status_message, ajax_status)
+			status(item_id, status_message, ajax_status);
 		},
 		success: function(response){
 			response = '<div>' + response + '</div>';
 			var main_form_hippo = $('#main_form', response);
 			// Submit the hippo
-			var arr_linking_screen = new Array();
+			var arr_screen = new Array();
 			main_form_hippo.find('input, select').each(function() {
 				if ($(this).attr('id').indexOf('delete_linkid') !== -1) {
-					arr_linking_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
+					arr_screen.push($(this).attr('name') + '=SQ_CRON_JOB_FUTURE_LINEAGE_DELETE_ALL_LINKS');
 				} else {
-					arr_linking_screen.push($(this).attr('name') + '=' + $(this).val());	
-				}
+					arr_screen.push($(this).attr('name') + '=' + $(this).val());	
+				}// End else
+				
 			});// End each
 			
-			var status_message = 'Building data';
-			status(item_id, status_message, ajax_status)
-			
 			// Serialize this crazy stuff
-			var linking_data = arr_linking_screen.join('&');	
-			var form_action = main_form.attr('action');
-			$.ajax({
-				url: form_action,
-				data: linking_data,
-				type: 'POST',
-				error: ajax_error,
-				beforeSend: function() {
-					var status_message = 'Submitting hippo job';
-					status(item_id, status_message, ajax_status)
-				},
-				success: function(hippo){
-					hippo = '<div>' + hippo + '</div>';
-					var submitted_hippo = $(hippo).html();
-					var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
-					// Check to see if we actually have a hippo
-					if (submitted_hippo[1] === undefined) {
-						var status_message = 'Hippo Error';
-						status(item_id, status_message, ajax_status)
-						return;	
-					}
-					var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
-					var submitted_hippo_url = hippo_url + submitted_hippo[0];
-					
-					$.ajax({
-						url: submitted_hippo_url,
-						type: 'POST',
-						error: ajax_error,
-						success: function () {
-							
-							submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj);	
-						}
-						
-				   });// End ajax
-					
-				}// End success
-				
-		   });// End ajax
+			var linking_data = arr_screen.join('&');	
+			
+			// Start to process our hippo job
+			process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, linking_data);
 			
 		}// End success
 		
@@ -1017,11 +1094,17 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @access public
 */
 function get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj) {
+	
+	// Everything depends on the ID, so we need to check that we have it
+	if (check_errors(item_id)) {
+		return;
+	}// End if
+	
 	// Find out what site we are at
 	var site_url = location.protocol + '//' + location.host;
 	var host_url = site_url + '?SQ_ACTION=asset_map_request';
 	var hippo_url = site_url + '?SQ_ACTION=hipo';
-	var screen_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + item_id.replace(/[^0-9]/g, '') + '&asset_ei_screen=' + item_screen;
+	var screen_url = site_url + '/_admin/?SQ_BACKEND_PAGE=main&backend_section=am&am_section=edit_asset&assetid=' + clean_id(item_id) + '&asset_ei_screen=' + item_screen;
 	
 	// Find current asset path and stuff
 	$.ajax({
@@ -1030,14 +1113,24 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 		error: ajax_error,
 		beforeSend: function() {
 			var status_message = 'Checking to see if we  need locks';
-			status(item_id, status_message, ajax_status)
+			status(item_id, status_message, ajax_status);
 		},
 		success: function(html){
-			// Silly jQuery bug, lets wrap the entire html in a div
+			// jQuery bug, lets wrap the entire html in a div
 			html = '<div>' + html + '</div>';
-			// Get our form info
+			
+			// Get our form infoa
 			var main_form = $('#main_form', html);
 			var form_action = main_form.attr('action');
+			
+			// What is our current asset status
+			var current_status = $(".sq-backend-data img", html).next('i:first').text();
+			if (current_status === asset_status) {
+				// Remove status from DOM and alert the user
+				$('#' + item_id).next('.ajax_status').remove();
+				alert('Asset ID:' + clean_id(item_id) + ' currently has the status of ' + current_status + '.  You are tring set this same status.');
+				return;	
+			}
 			
 			// We should check if we already have the locks
 			if (main_form.find("input[value='Acquire Lock(s)']")) {
@@ -1048,9 +1141,11 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 					} else {
 						arr_current_item.push($(this).attr('name') + '=' + $(this).val());	
 					}
-				});
-				// Serialize this crazy stuff
-				var linking_data = arr_current_item.join('&');	
+				});// End each
+				
+				// Serialize this stuff
+				var linking_data = arr_current_item.join('&');
+				
 				// Lets check and see if we need to get locks
 				$.ajax({
 					url: form_action,
@@ -1059,7 +1154,7 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 					error: ajax_error,
 					beforeSend: function() {
 						var status_message = 'Getting locks';
-						status(item_id, status_message, ajax_status)
+						status(item_id, status_message, ajax_status);
 					},
 					success: function(html){
 						
@@ -1068,8 +1163,9 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 							linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj);
 						} else if (item_screen === 'details') {
 							// Run our details function
-							details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, asset_status);
-						}
+							details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, asset_status);
+							
+						}// End if
 			
 					}// End success
 					

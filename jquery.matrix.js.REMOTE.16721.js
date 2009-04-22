@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-22-2009)
+* version: 0.3 (APR-16-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -204,7 +204,7 @@ $.fn.matrixMap = function (options) {
 * Plugin that allows Asset Builders to be submitted using Ajax.  
 * This is nessessary to allow Matrix to open a from as a stand alone.
 *
-* @version $Revision: 0.2.8
+* @version $Revision: 0.2
 */
 $.fn.matrixForm = function (options) {
 	var defaults = {
@@ -582,7 +582,7 @@ $.fn.matrixDelete = function (options) {
 * This Plugin will clone the current asset and link to the same parent.  
 * Plugin requires the configuration of a Trigger to clone assets.
 *
-* @version $Revision: 0.2.8.1
+* @version $Revision: 0.2.5
 */
 $.fn.matrixClone = function (options) {
 	var defaults = {
@@ -590,8 +590,7 @@ $.fn.matrixClone = function (options) {
 		urlSuffix: '?action=duplicate',
 		target: 'body',
 		beforeComplete: function () {},
-		onComplete: function () {},
-		onSelect: function () {}
+		onComplete: function () {}
 	};
 
 	var options = $.extend(defaults, options);
@@ -606,10 +605,6 @@ $.fn.matrixClone = function (options) {
 			var itemHref = obj.attr('href');
 			var itemDesc = obj.attr('rel');
 			$('#duplicateConfirm').unbind('click');
-			
-			// Add our select callback
-			defaults.onSelect.apply(obj, []);
-			
 			$('#duplicateConfirm').click(function () {
 				var duplicateVal = $('#duplicateInput').val();
 				

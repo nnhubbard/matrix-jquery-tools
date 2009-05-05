@@ -36,7 +36,7 @@ function page_on_load() {
 */
 $.fn.matrixMap = function (options) {
 	var defaults = {
-		root: '1',
+		root: 1,
 		showChildren: false
 	};
 	

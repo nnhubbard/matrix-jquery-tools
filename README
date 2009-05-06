@@ -1,5 +1,9 @@
 jquery.matrix.js
+jquery.matrixMap.js
 Copyright 2009 Nicholas Hubbard
+Dual licensed under the MIT and GPL licenses:
+http://www.opensource.org/licenses/mit-license.php
+http://www.gnu.org/licenses/gpl.html
 
 This file provides a description for each jquery.matrix plugin.
 NOTE: Most plugins require some sort of configuration within MySource Matrix in order to talk to the server.  Please take a look at the tutorials at www.zedsaid.com/projects

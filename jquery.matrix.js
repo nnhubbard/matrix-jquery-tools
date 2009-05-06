@@ -31,6 +31,7 @@ function page_on_load() {
 * Plugin that allows you to browse the MySource Matrix asset tree structure.  
 * This is beneficial sometimes as you can bypass the java asset map.
 * It sends XML to Matrix, then receives an XML response.
+* Demo: http://www.puc.edu/dev/jquery-matrix-test-suite/matrix-map
 *
 * @version $Revision: 0.3
 */
@@ -60,7 +61,7 @@ $.fn.matrixMap = function (options) {
 	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
 	var branch_closed = '<img src="/__lib/web/images/tree/branch_closed.gif" />';
 	var branch_open = '<img src="/__lib/web/images/tree/branch_open.gif" />';
-	var branch_stalk = '<img src="/__lib/web/images/tree/stalk" />';
+	var branch_stalk = '<img src="/__lib/web/images/tree/stalk.gif" />';
 	
 	// Create our ajax to send the XML
 	$.ajax({
@@ -98,10 +99,14 @@ $.fn.matrixMap = function (options) {
 					} else {
 						var indicate_kids = branch_closed;
 					}
-					$('<li></li>').html(indicate_kids + '<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo('#map_root');
+					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo('#map_root');
 				}// End if
 			
 			});// End each
+			
+			// Set our first/last class
+			$('ul li:first').addClass('first');
+			$('ul li:last').addClass('last');
 			
 		}// End success
 		
@@ -127,7 +132,7 @@ $.fn.matrixMap = function (options) {
 			current_asset.parent().next('ul').hide();
 			return;
 		} else {
-			// This must meen that we can expant, so add a class
+			// This must meen that we can expand, so add a class
 			current_asset.addClass('children');
 			// Let it know that we have expanded so we don't have to load again
 			current_asset.addClass('cache');
@@ -184,10 +189,14 @@ $.fn.matrixMap = function (options) {
 							var indicate_kids = branch_closed;
 						}
 						
-						$('<li></li>').html(indicate_kids + '<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(current_asset.parent().next());
+						$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(current_asset.parent().next());
 					}// End if
 				
 				});// End each
+				
+				// Set our first/last class
+				$('ul li:first').addClass('first');
+				$('ul li:last').addClass('last');
 				
 			}// End success
 			

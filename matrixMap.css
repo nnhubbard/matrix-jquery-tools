@@ -1,11 +1,30 @@
 /* Styles for jquery.matrix.js matrixMap plugin */
 
+/* Text Styles */
+#map_root {font: .9em/.6em Helvetica, Arial, Geneva, sans-serif; color: #000;}
+
+/* Remove any offending styles */
+#map_root a, 
+#map_root :link,
+#map_root :visited {text-decoration:none;}
+#map_root ul,
+#map_root ol,
+#map_root li {list-style:none;}
+#map_root a img,
+#map_root :link img,
+#map_root :visited img {border:none;}
+#map_root a:focus, 
+#map_root a:visited {outline-style: none;}
+
 /* Tree */
 #map_root {width: 350px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0;}
-#map_root li {list-style: none; margin: 0;}
+#map_root li {margin: 0; padding: 4px 0 4px 16px;}
 #map_root li a {color: #000; font-size: .9em;}
 #map_root li a:hover {color: #000;}
-#map_root li img {margin-bottom: -6px;}
+#map_root li img {margin-bottom: 0;}
+
+/* Stalks */
+#map_root li.last {background: url(/__lib/web/images/tree/branch.gif) no-repeat -4px 0;}
 
 /* Icons */
 #map_root a {padding-left: 16px;}
@@ -16,3 +35,7 @@
 
 /* Loading */
 #map_root ul.loading {font-size: .9em;}
+
+/* Status */
+#map_root .live {background-color: #0f0;}
+#map_root .construction {background-color: #19a2fa;}

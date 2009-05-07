@@ -65,6 +65,19 @@ $.fn.matrixMap = function (options) {
 		
 		return false;
 		
+	});// End live dblclick
+	
+	$('#map_root li a.asset_name').live('click', function(){
+			
+			// Set our color when clicked
+			var attr_stat = $(this).attr('status');
+			
+			if (attr_stat === '16') {
+				//$(this).addClass('live');
+			} else if (attr_stat === '2') {
+				//$(this).addClass('construction');
+			}
+	
 	});// End live click
 	
 };// End matrixMap
@@ -85,7 +98,7 @@ function expand(current_asset, sub_root) {
 		// This must meen that we can expand, so add a class
 		current_asset.addClass('children');
 		// Let it know that we have expanded so we don't have to load again
-		current_asset.addClass('cache');
+		current_asset.parent('li').addClass('cache');
 		
 	}// End else
 	
@@ -121,9 +134,6 @@ function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 	// Set somes image vars
 	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
 	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
-	var branch_closed = '<img src="/__lib/web/images/tree/branch_closed.gif" />';
-	var branch_open = '<img src="/__lib/web/images/tree/branch_open.gif" />';
-	var branch_stalk = '<img src="/__lib/web/images/tree/stalk.gif" />';
 	
 	// Create our ajax to send the XML
 	$.ajax({
@@ -166,12 +176,25 @@ function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 					}
 					
 					// See if we have kids
-					if (asset_num_kids === 0) {
-						var indicate_kids = 'open';
+					if (asset_num_kids > 0) {
+						var indicate_kids = 'kids_closed';
 					} else {
-						var indicate_kids = 'closed';
+						var indicate_kids = '';
 					}
-					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a> <a id="a' + asset_id + '" href="#" rel="' + asset_num_kids + '">' + asset_name + '</a>').appendTo(target).addClass(indicate_kids);
+					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" >' + asset_name + '</a>')
+						.appendTo(target)
+						.addClass(indicate_kids)
+						.children('a:last')
+						.attr({
+							id: asset_id,
+							status: asset_status,
+							link_type: asset_link_type,
+							type_code: asset_type_code,
+							num_kids: asset_num_kids,
+							name: asset_name
+							})
+						.addClass('asset_name');
+						
 				}// End if
 			
 			});// End each

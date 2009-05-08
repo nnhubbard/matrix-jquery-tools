@@ -1,18 +1,46 @@
 /* Styles for jquery.matrix.js matrixMap plugin */
 
+/* Text Styles */
+#map_root {font: .8em/.6em Helvetica, Arial, Geneva, sans-serif; color: #000;}
+
+/* Remove any offending styles */
+#map_root a, 
+#map_root :link,
+#map_root :visited {text-decoration:none;}
+#map_root ul,
+#map_root ol,
+#map_root li {list-style:none;}
+#map_root a img,
+#map_root :link img,
+#map_root :visited img {border:none;}
+#map_root a:focus, 
+#map_root a:visited {outline-style: none;}
+
 /* Tree */
-#map_root {width: 350px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0;}
-#map_root li {list-style: none; margin: 0;}
-#map_root li a {color: #000; font-size: .9em;}
+#map_root {width: 400px; height: 400px; overflow: auto; background-color: #fff; padding: 12px;	border: 1px solid #b8b8b8; margin-left: 0; white-space: nowrap;}
+#map_root li a {color: #000; font-size: .9em; line-height: 16px; height: 16px;}
 #map_root li a:hover {color: #000;}
-#map_root li img {margin-bottom: -6px;}
+#map_root li img {margin-bottom: 0;}
+#map_root a.asset_name {display: block; float: left; margin-left: 20px;}
+
+/* Stalks */
+#map_root ul {background: url(/__lib/web/images/tree/stalk.gif) repeat-y -5px 0; padding: 0 0 0 16px;}
+#map_root li {display: block; line-height: 18px; padding: 0 0 0 14px; background: url(/__lib/web/images/tree/stalk.gif) no-repeat -5px 0; clear: both; height: 16px;}
+#map_root li.closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px 0;}
+#map_root li.kids_closed {background: url(/__lib/web/images/tree/branch_closed.gif) no-repeat -5px -2;}
+#map_root li.last {background: url(/__lib/web/images/tree/branch.gif) no-repeat -5px -3;}
+#map_root ul.loading li {background: url(/__lib/web/images/icons/asset_map/loading_node.png) no-repeat 0 0;}
+#map_root li.cache {background: url(/__lib/web/images/tree/branch_open.gif) no-repeat -5px -2px;}
 
 /* Icons */
-#map_root a {padding-left: 16px;}
-#map_root a.icon_hold {position: relative; padding-left: 0;}
+#map_root a.icon_hold {position: relative; display: block; float: left;}
 #map_root a.icon_hold img.type_2 {position: absolute; z-index: 2; top: 0; left: 0;}
 #map_root a.icon_hold img.asset_image,
 #map_root a.icon_hold img {position: absolute; z-index: 1; top: 0; left: 0;}
 
 /* Loading */
 #map_root ul.loading {font-size: .9em;}
+
+/* Status */
+#map_root a.live {background-color: #dbf18a;}
+#map_root a.construction {background-color: #aaccdd;}

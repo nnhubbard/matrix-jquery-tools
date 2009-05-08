@@ -62,7 +62,8 @@ $.fn.matrixForm = function (options) {
 		var form_submit_class = form_submit.attr('class');
 		
 		// Check to see if we are uploading a file
-		if ($(obj + ' input:file').length === 0) {
+		if (!obj.find('input:file')) {
+			
 			$('#sq_commit_button').removeAttr('onclick');
 			
 			// Choose if we should set click for asset builder or custom form
@@ -160,6 +161,7 @@ $.fn.matrixForm = function (options) {
 			});// End Click
 			
 		} else {
+			// We are using an asset builder for file uploads
 			
 			// Use iframe if form is uploading a file
 			$('body').append('<iframe id="assetBuilderFrame" name="assetBuilderFrame" style="position:absolute; top:-1000px; left:-1000px;"></iframe>');

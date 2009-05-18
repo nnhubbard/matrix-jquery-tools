@@ -1,7 +1,5 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (APR-22-2009)
-=======
 * version: 0.3 (May-05-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later

@@ -666,6 +666,9 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 * @access public
 */
 function progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj) {
+	
+	debug('progress', 1, true);
+	
 	if (percent_done >= 100 || isNaN(percent_done)) {
 		
 		// Remove ajax_status one we are finished with the hippo
@@ -701,6 +704,9 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status, compl
 * @access public
 */
 function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) {
+	
+	debug('submit_hippo function', 1, true);
+	
 	$.ajax({
 		url: submitted_hippo_url,
 		type: 'GET',
@@ -720,6 +726,8 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) 
 
 
 function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, linking_data) {
+	
+	debug('process_hippo function', 1, true);
 	
 	var status_message = 'Building data';
 	status(item_id, status_message, ajax_status);
@@ -791,6 +799,9 @@ function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, c
 * @access public
 */
 function status(item_id, status_message, ajax_status) {
+	
+	debug('status function', 1, true);
+	
 	if (ajax_status) {
 		// We need to set where out status will be
 		$('#' + item_id).next('.ajax_status').remove();
@@ -816,6 +827,8 @@ function status(item_id, status_message, ajax_status) {
 * @access public
 */
 function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, asset_status) {
+	
+	debug('details_screen function', 1, true);
 	
 	// Lets see what status means in numerical values
 	if (asset_status === 'Live') {
@@ -876,6 +889,9 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @access public
 */
 function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj) {
+	
+	debug('linking_screen function', 1, true);
+	
 	$.ajax({
 		url: screen_url,
 		type: 'GET',
@@ -923,6 +939,8 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 * @access public
 */
 function get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj) {
+	
+	debug('get_locks function', 1, true);
 	
 	// Everything depends on the ID, so we need to check that we have it
 	if (check_errors(item_id)) {
@@ -1011,3 +1029,19 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 	});// End ajax
 	
 }// End get_locks
+
+// Small debug function that will log errors for us
+function debug(message, error, trace) {
+	
+	// Since this is for testing, we can turn it on or off
+	var status = true;
+	
+	if (status) {
+		if (error === 1) console.debug(message);
+		if (error === 2) console.info(message);
+		if (error === 3) console.warn(message);
+		if (error === 4) console.error(message);
+		if (trace) console.trace();
+	}
+	
+}// End debug

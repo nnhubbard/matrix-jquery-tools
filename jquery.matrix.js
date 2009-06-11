@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3 (May-05-2009)
+* version: 0.3.1 (JUNE-10-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix

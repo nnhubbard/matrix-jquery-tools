@@ -628,7 +628,8 @@ function check_errors(item_id) {
 	// Everything depends on the ID, so we need to check that we have it
 	var item_id = clean_id(item_id);
 	if (isNaN(item_id) || item_id === '' || item_id === undefined) {
-		alert('The asset ID that was passed does not appear to be a number, please check the ID you are passing.');
+		alert('The asset ID that was passed does not appear to be a number, please check the ID you are passing.'+
+			  '\n\n See documentation for the correct usage: www.zedsaid.com/jquery-matrix');
 		return true;
 	}
 }// End check_errors
@@ -667,7 +668,7 @@ function ajax_error(xhr, ajaxOptions, errorThrown) {
 */
 function progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj) {
 	
-	debug('progress', 1, true);
+	debug('progress', 1);
 	
 	if (percent_done >= 100 || isNaN(percent_done)) {
 		
@@ -705,7 +706,7 @@ function progress(item_id, percent_done, submitted_hippo_url, ajax_status, compl
 */
 function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) {
 	
-	debug('submit_hippo function', 1, true);
+	debug('submit_hippo function', 1);
 	
 	$.ajax({
 		url: submitted_hippo_url,
@@ -727,7 +728,7 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) 
 
 function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, linking_data) {
 	
-	debug('process_hippo function', 1, true);
+	debug('process_hippo function', 1);
 	
 	var status_message = 'Building data';
 	status(item_id, status_message, ajax_status);
@@ -742,7 +743,7 @@ function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, c
 			var status_message = 'Submitting hippo job';
 			status(item_id, status_message, ajax_status);
 		},
-		success: function(hippo){
+		success: function(hippo) {
 			
 			// What screen are we using
 			var current_screen = screen_url.split('asset_ei_screen=');
@@ -762,8 +763,11 @@ function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, c
 			var submitted_hippo = submitted_hippo.split('?SQ_ACTION=hipo');
 			// Check to see if we actually have a hippo
 			if (submitted_hippo[1] === undefined) {
+				var status = 'There has been a hippo error, please check the hippo herder.';
+				debug(status, 4);
 				var status_message = 'Hippo Error';
 				status(item_id, status_message, ajax_status);
+				alert(status);
 				return;	
 			}// End if
 			var submitted_hippo = submitted_hippo[1].split('&SQ_BACKEND_PAGE');
@@ -800,7 +804,7 @@ function process_hippo(item_id, screen_url, main_form, hippo_url, ajax_status, c
 */
 function status(item_id, status_message, ajax_status) {
 	
-	debug('status function', 1, true);
+	debug('status function', 1);
 	
 	if (ajax_status) {
 		// We need to set where out status will be
@@ -828,7 +832,7 @@ function status(item_id, status_message, ajax_status) {
 */
 function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj, asset_status) {
 	
-	debug('details_screen function', 1, true);
+	debug('details_screen function', 1);
 	
 	// Lets see what status means in numerical values
 	if (asset_status === 'Live') {
@@ -837,6 +841,10 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 		var status_code = 64;
 	} else if (asset_status === 'Under Construction') {
 		var status_code = 2;
+	} else {
+		var status = 'The status you are trying to set it not supported!';
+		debug(status, 4);
+		alert(status);
 	}
 	
 	$.ajax({
@@ -890,7 +898,7 @@ function details_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 */
 function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, complete, obj) {
 	
-	debug('linking_screen function', 1, true);
+	debug('linking_screen function', 1);
 	
 	$.ajax({
 		url: screen_url,
@@ -940,10 +948,11 @@ function linking_screen(item_id, screen_url, main_form, hippo_url, ajax_status, 
 */
 function get_locks(item_id, item_screen, ajax_status, asset_status, complete, obj) {
 	
-	debug('get_locks function', 1, true);
+	debug('get_locks function', 1);
 	
 	// Everything depends on the ID, so we need to check that we have it
 	if (check_errors(item_id)) {
+		debug('Not a valid asset ID', 4);
 		return;
 	}// End if
 	
@@ -972,6 +981,7 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 			// What is our current asset status
 			var current_status = $(".sq-backend-data img", html).next('i:first').text();
 			if (current_status === asset_status) {
+				debug('You are tying to set the same status that the asset is', 4);
 				// Remove status from DOM and alert the user
 				$('#' + item_id).next('.ajax_status').remove();
 				alert('Asset ID:' + clean_id(item_id) + ' currently has the status of ' + current_status + '.  You are tring set this same status.');
@@ -1017,12 +1027,16 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 					
 				});// End ajax
 				
-			}// End if
-			
-			var status_message = 'Error getting locks';
-			status(item_id, status_message, ajax_status);
+			} else {
+				
+				debug('Error Getting Locks', 4);
 					
-			return;
+				var status_message = 'Error Getting Locks';
+				status(item_id, status_message, ajax_status);
+						
+				return;
+			
+			}// End else
 			
 		}// End success
 	
@@ -1040,10 +1054,12 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 *
 * @access public
 */
-function debug(message, error, trace) {
+function debug(message, error) {
 	
-	// Since this is for testing, we can turn it on or off
+	// Should we debug?
 	var status = false;
+	// Should we show a stack trace for each dubug call?
+	var trace = false;
 	
 	if (status) {
 		if (error === 1) console.debug(message);

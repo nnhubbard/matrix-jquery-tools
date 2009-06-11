@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3.1 (JUNE-10-2009)
+* version: 0.3.1 (JUNE-11-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -1034,7 +1034,7 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 function debug(message, error, trace) {
 	
 	// Since this is for testing, we can turn it on or off
-	var status = true;
+	var status = false;
 	
 	if (status) {
 		if (error === 1) console.debug(message);

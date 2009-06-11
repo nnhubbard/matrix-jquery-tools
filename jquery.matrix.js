@@ -1030,7 +1030,16 @@ function get_locks(item_id, item_screen, ajax_status, asset_status, complete, ob
 	
 }// End get_locks
 
-// Small debug function that will log errors for us
+
+/**
+* Function to debug issues with our hippo functions
+*
+* @param string		message		The message to display in the console
+* @param integer	error		The error type to display
+* @param boolean	trace		Whether or not to show a stack trace
+*
+* @access public
+*/
 function debug(message, error, trace) {
 	
 	// Since this is for testing, we can turn it on or off

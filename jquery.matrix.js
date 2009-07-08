@@ -714,7 +714,7 @@ function submit_hippo(item_id, submitted_hippo_url, ajax_status, complete, obj) 
 		success: function(data){
 			var percent_done = parseInt($('.sq-hipo-header-progress-bar-percent', data).text().replace(/[^0-9]/g, ''));
 			var status_message = 'Hippo is at ' + percent_done +'%';
-			status(item_id, status_message, ajax_status)
+			status(item_id, status_message, ajax_status);
 			
 			// Run our function that checks the hippo progress
 			progress(item_id, percent_done, submitted_hippo_url, ajax_status, complete, obj);

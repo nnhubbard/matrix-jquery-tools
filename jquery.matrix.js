@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3.1 (JUNE-11-2009)
+* version: 0.3.2 (JUL-20-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -35,12 +35,13 @@ function page_on_load() {
 */
 $.fn.matrixForm = function (options) {
 	var defaults = {
-		findCreated: '',
-		findTarget: '',
-		loading: '',
-		errorArray: false,
-		errorSource: '',
-		errorMessage: 'Please correct the following errors:',
+		findCreated: 	'',
+		findTarget: 	'',
+		loading: 		'',
+		errorArray: 	false,
+		errorSource: 	'',
+		errorMessage: 	'Please correct the following errors:',
+		noFade:			false,
 		onComplete: function () {}
 	};
 
@@ -62,7 +63,7 @@ $.fn.matrixForm = function (options) {
 		var form_submit_class = form_submit.attr('class');
 		
 		// Check to see if we are uploading a file
-		if (!obj.find('input:file')) {
+		if (obj.find('input:file')) {
 			
 			$('#sq_commit_button').removeAttr('onclick');
 			
@@ -78,7 +79,7 @@ $.fn.matrixForm = function (options) {
 				form_submit.remove();
 				
 				// Creat our own submit string, since serialize won't grab it
-				var ajax_query = '&' + form_submit_name + '=' + form_submit_val + '';
+				var ajax_query = '&' + form_submit_name + '=' + form_submit_val;
 			} else {
 				var set_click = 'sq_commit_button';
 			}// End else
@@ -111,14 +112,16 @@ $.fn.matrixForm = function (options) {
 						if (defaults.findCreated !== '' && defaults.findTarget !== '') {
 							$(defaults.findTarget).html($(data).find(defaults.findCreated));
 							
-							setTimeout(function () {
-								$(defaults.findTarget).fadeOut('slow',
-									function () {
-										$(this).html('');
-									});
-								},5000
-								
-							);// End timout
+							if (!defaults.noFade) {
+								setTimeout(function () {
+									$(defaults.findTarget).fadeOut('slow',
+										function () {
+											$(this).html('');
+										});
+									},5000
+									
+								);// End timout
+							}// End if
 							
 						}// End if
 							

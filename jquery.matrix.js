@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrix.js)
-* version: 0.3.1 (JUNE-11-2009)
+* version: 0.3.2 (JUL-20-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 * @requires Trigger or Asset configuration in MySource Matrix
@@ -31,16 +31,17 @@ function page_on_load() {
 * Plugin that allows Asset Builders to be submitted using Ajax.  
 * This is nessessary to allow Matrix to open a from as a stand alone.
 *
-* @version $Revision: 0.2
+* @version $Revision: 0.2.8
 */
 $.fn.matrixForm = function (options) {
 	var defaults = {
-		findCreated: '',
-		findTarget: '',
-		loading: '',
-		errorArray: false,
-		errorSource: '',
-		errorMessage: 'Please correct the following errors:',
+		findCreated: 	'',
+		findTarget: 	'',
+		loading: 		'',
+		errorArray: 	false,
+		errorSource: 	'',
+		errorMessage: 	'Please correct the following errors:',
+		noFade:			false,
 		onComplete: function () {}
 	};
 
@@ -62,7 +63,7 @@ $.fn.matrixForm = function (options) {
 		var form_submit_class = form_submit.attr('class');
 		
 		// Check to see if we are uploading a file
-		if (!obj.find('input:file')) {
+		if (obj.find('input:file')) {
 			
 			$('#sq_commit_button').removeAttr('onclick');
 			
@@ -111,14 +112,16 @@ $.fn.matrixForm = function (options) {
 						if (defaults.findCreated !== '' && defaults.findTarget !== '') {
 							$(defaults.findTarget).html($(data).find(defaults.findCreated));
 							
-							setTimeout(function () {
-								$(defaults.findTarget).fadeOut('slow',
-									function () {
-										$(this).html('');
-									});
-								},5000
-								
-							);// End timout
+							if (!defaults.noFade) {
+								setTimeout(function () {
+									$(defaults.findTarget).fadeOut('slow',
+										function () {
+											$(this).html('');
+										});
+									},5000
+									
+								);// End timout
+							}// End if
 							
 						}// End if
 							
@@ -411,7 +414,7 @@ $.fn.matrixDelete = function (options) {
 * This Plugin will clone the current asset and link to the same parent.  
 * Plugin requires the configuration of a Trigger to clone assets.
 *
-* @version $Revision: 0.2.5
+* @version $Revision: 0.2.8.1
 */
 $.fn.matrixClone = function (options) {
 	var defaults = {
@@ -419,7 +422,8 @@ $.fn.matrixClone = function (options) {
 		urlSuffix: '?action=duplicate',
 		target: 'body',
 		beforeComplete: function () {},
-		onComplete: function () {}
+		onComplete: function () {},
+		onSelect: function () {}
 	};
 
 	var options = $.extend(defaults, options);
@@ -434,6 +438,10 @@ $.fn.matrixClone = function (options) {
 			var itemHref = obj.attr('href');
 			var itemDesc = obj.attr('rel');
 			$('#duplicateConfirm').unbind('click');
+			
+			// Add our select callback
+			defaults.onSelect.apply(obj, []);
+			
 			$('#duplicateConfirm').click(function () {
 				var duplicateVal = $('#duplicateInput').val();
 				

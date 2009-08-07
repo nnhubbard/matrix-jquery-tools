@@ -78,7 +78,7 @@ $.fn.matrixForm = function (options) {
 				form_submit.remove();
 				
 				// Creat our own submit string, since serialize won't grab it
-				var ajax_query = '&' + form_submit_name + '=' + form_submit_val + '';
+				var ajax_query = '&' + form_submit_name + '=' + form_submit_val;
 			} else {
 				var set_click = 'sq_commit_button';
 			}// End else

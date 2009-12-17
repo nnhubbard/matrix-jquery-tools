@@ -24,7 +24,8 @@
 $.fn.matrixMap = function (options) {
 	var defaults = {
 		root: 1,
-		showChildren: false
+		showChildren: false,
+		debug: false
 	};
 	
 	var options = $.extend(defaults, options);
@@ -80,165 +81,174 @@ $.fn.matrixMap = function (options) {
 	
 	// Bind when user clicks icon to invoke a map mode
 	$('a.icon_hold').live('click', function(){
-		// Selector
-		map_mode = 5;
-		
-		// We are now going to set the map mode
-		$('#map_root li').hover(
-			function () {
-				$(this).children('a').wrapAll($('<span class="asset_hold"></span>'));
-			}, 
-			function () {
-				var cnt = $('span.asset_hold', $(this)).contents();
-				$('span.asset_hold', $(this)).replaceWith(cnt);
-			}
-		);//end hover
-	
-	});
+		if (map_mode !== 5) {
+			// Selector
+			map_mode = 5;
+			debug('Invoke map mode');
+			
+			// We are now going to set the map mode
+			$('#map_root li').hover(
+				function () {
+					$(this).children('a').wrapAll($('<span class="asset_hold"></span>'));
+				}, 
+				function () {
+					var cnt = $('span.asset_hold', $(this)).contents();
+					$('span.asset_hold', $(this)).replaceWith(cnt);
+				}
+			);//end hover
+		}//end if
+	});//end click
 	
 	// Remove selector if clicking escape
 	$(document).keyup(function(event){
 		if (event.keyCode == 27 && map_mode === 5) {
-			$('#map_root li').unbind('hover').die('hover');
+			debug('Unbind map mode');
+			$('#map_root li').unbind('hover');
 		}
 	});//end keyup
 	
 	
+	// ### Custom Functions ###
+	
+	function expand(current_asset, sub_root) {
+		
+		// Check to see if we already have a class
+		if (current_asset.hasClass('children')) {
+			current_asset.removeClass('children');
+			
+		} else {
+			
+			// This must meen that we can expand, so add a class
+			current_asset.addClass('children');
+			// Let it know that we have expanded so we don't have to load again
+			current_asset.parent('li').addClass('cache');
+			
+		}// End else
+		
+	}// End build_tree
+	
+	
+	function get_children(host_url, xml_get, parent, current_asset, sub_root) {
+		
+		if (!parent) {
+			// If we have already expanded the children we don't want to load the tree again
+			if (current_asset.parent().hasClass('cache')) {
+				if (current_asset.parent().hasClass('closed')) {
+					current_asset.parent().next('ul').show();
+					current_asset.parent().removeClass('closed');
+					return;
+				}
+				// Hide our tree
+				current_asset.parent().next('ul').hide();
+				current_asset.parent().addClass('closed');
+				return;
+			}
+			
+			// Don't expand if we have no kids
+			if (!current_asset.parent().hasClass('kids_closed')) return;
+				
+			// Create a new list
+			current_asset.parent().after('<ul></ul>');
+			
+			// What do we add it to?
+			var target = current_asset.parent().next();
+			
+			// Construct our XML to send
+			xml_get = '<command action="get assets"><asset assetid="' + sub_root + '" start="0" limit="150" linkid="10" /></command>';
+			
+			// Check if we need to even get kids
+			expand(current_asset, sub_root);
+			
+		} else {
+			
+			// What do we add it to?
+			var target = '#map_root';
+		}
+		
+		// Set somes image vars
+		var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
+		var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
+		
+		// Create our ajax to send the XML
+		$.ajax({
+			url: host_url,
+			type: 'POST',
+			processData: false,
+			data: xml_get,
+			contentType: "text/xml",
+			dataType: 'xml',
+			error: function (XMLHttpRequest, textStatus, errorThrown) {
+				console.log(XMLHttpRequest + textStatus + errorThrown);
+			},
+			beforeSend: function () {
+				if (!parent) {
+					current_asset.parent().after('<ul class="loading"><li>Loading...</li></ul>');
+				}
+			},
+			success: function(xml) {
+				// Remove loading
+				$('.loading').remove();
+				// Check each asset that we find
+				$(xml).find('asset').each(function() {
+					// Only include asset tags with attributes
+					if ($(this).attr('assetid') > 0) {
+						// Set some of our vars that will populate our asset map
+						var asset_id = unescape($(this).attr('assetid'));
+						var asset_status = $(this).attr('status');
+						var asset_link_type = parseInt($(this).attr('link_type'));
+						var asset_type_code = $(this).attr('type_code');
+						var asset_num_kids = parseInt($(this).attr('num_kids'));
+						var asset_name = unescape($(this).attr('name')).replace(/\+/g, ' ');
+						// See what kind of link type we have
+						if (asset_link_type === 2) {
+							// Type 2 link
+							var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+							asset_image = type_2_image + asset_image;
+						} else {
+							// Type 1 link
+							var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
+						}
+						
+						// See if we have kids
+						if (asset_num_kids > 0) {
+							var indicate_kids = 'kids_closed';
+						} else {
+							var indicate_kids = '';
+						}
+						$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
+							.appendTo(target)
+							.addClass(indicate_kids)
+							.children('a:last')
+							.attr({
+								id: asset_id,
+								status: asset_status,
+								link_type: asset_link_type,
+								type_code: asset_type_code,
+								num_kids: asset_num_kids,
+								name: asset_name
+								});
+							
+					}// End if
+				
+				});// End each
+				
+				// Set our first/last class
+				$('ul li:first').addClass('first');
+				$('ul li:last').addClass('last');
+				
+			}// End success
+			
+		});// End ajax
+		
+	}// End get_children
+	
+	
+	function debug(msg) {
+		if (defaults.debug) {
+			console.log(msg);
+		}
+	}//end debug
+	
 };// End matrixMap
 
 })(jQuery);
-
-
-function expand(current_asset, sub_root) {
-	
-	// Check to see if we already have a class
-	if (current_asset.hasClass('children')) {
-		current_asset.removeClass('children');
-		
-	} else {
-		
-		// This must meen that we can expand, so add a class
-		current_asset.addClass('children');
-		// Let it know that we have expanded so we don't have to load again
-		current_asset.parent('li').addClass('cache');
-		
-	}// End else
-	
-}// End build_tree
-
-
-function get_children(host_url, xml_get, parent, current_asset, sub_root) {
-	
-	if (!parent) {
-		// If we have already expanded the children we don't want to load the tree again
-		if (current_asset.parent().hasClass('cache')) {
-			if (current_asset.parent().hasClass('closed')) {
-				current_asset.parent().next('ul').show();
-				current_asset.parent().removeClass('closed');
-				return;
-			}
-			// Hide our tree
-			current_asset.parent().next('ul').hide();
-			current_asset.parent().addClass('closed');
-			return;
-		}
-		
-		// Don't expand if we have no kids
-		if (!current_asset.parent().hasClass('kids_closed')) return;
-			
-		// Create a new list
-		current_asset.parent().after('<ul></ul>');
-		
-		// What do we add it to?
-		var target = current_asset.parent().next();
-		
-		// Construct our XML to send
-		xml_get = '<command action="get assets"><asset assetid="' + sub_root + '" start="0" limit="150" linkid="10" /></command>';
-		
-		// Check if we need to even get kids
-		expand(current_asset, sub_root);
-		
-	} else {
-		
-		// What do we add it to?
-		var target = '#map_root';
-	}
-	
-	// Set somes image vars
-	var type_2_path = '/__lib/web/images/icons/asset_map/not_visible.png';
-	var type_2_image = '<img class="type_2" src="' + type_2_path + '" />';
-	
-	// Create our ajax to send the XML
-	$.ajax({
-		url: host_url,
-		type: 'POST',
-		processData: false,
-		data: xml_get,
-		contentType: "text/xml",
-		dataType: 'xml',
-		error: function (XMLHttpRequest, textStatus, errorThrown) {
-			console.log(XMLHttpRequest + textStatus + errorThrown);
-		},
-		beforeSend: function () {
-			if (!parent) {
-				current_asset.parent().after('<ul class="loading"><li>Loading...</li></ul>');
-			}
-		},
-		success: function(xml) {
-			// Remove loading
-			$('.loading').remove();
-			// Check each asset that we find
-			$(xml).find('asset').each(function() {
-				// Only include asset tags with attributes
-				if ($(this).attr('assetid') > 0) {
-					// Set some of our vars that will populate our asset map
-					var asset_id = unescape($(this).attr('assetid'));
-					var asset_status = $(this).attr('status');
-					var asset_link_type = parseInt($(this).attr('link_type'));
-					var asset_type_code = $(this).attr('type_code');
-					var asset_num_kids = parseInt($(this).attr('num_kids'));
-					var asset_name = unescape($(this).attr('name')).replace(/\+/g, ' ');
-					// See what kind of link type we have
-					if (asset_link_type === 2) {
-						// Type 2 link
-						var asset_image = '<img class="asset_image" src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
-						asset_image = type_2_image + asset_image;
-					} else {
-						// Type 1 link
-						var asset_image = '<img src="/__data/asset_types/' + asset_type_code + '/icon.png" />';
-					}
-					
-					// See if we have kids
-					if (asset_num_kids > 0) {
-						var indicate_kids = 'kids_closed';
-					} else {
-						var indicate_kids = '';
-					}
-					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
-						.appendTo(target)
-						.addClass(indicate_kids)
-						.children('a:last')
-						.attr({
-							id: asset_id,
-							status: asset_status,
-							link_type: asset_link_type,
-							type_code: asset_type_code,
-							num_kids: asset_num_kids,
-							name: asset_name
-							});
-						
-				}// End if
-			
-			});// End each
-			
-			// Set our first/last class
-			$('ul li:first').addClass('first');
-			$('ul li:last').addClass('last');
-			
-		}// End success
-		
-	});// End ajax
-	
-}// End get_children
-	
-	

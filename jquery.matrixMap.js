@@ -1,6 +1,6 @@
 /**
 * MySource Matrix Simple Edit Tools (jquery.matrixMap.js)
-* version: 0.1 (MAY-05-2009)
+* version: 0.1.1 (DEC-16-2009)
 * Copyright (C) 2009 Nicholas Hubbard
 * @requires jQuery v1.3 or later
 *
@@ -13,7 +13,6 @@
 
 (function ($) {
 	  
-
 /**
 * Plugin that allows you to browse the MySource Matrix asset tree structure.  
 * This is beneficial sometimes as you can bypass the java asset map.
@@ -29,11 +28,10 @@ $.fn.matrixMap = function (options) {
 	};
 	
 	var options = $.extend(defaults, options);
-	
-	var obj = $(this);
-	
-	// We need to grab our parent first
-	var parent = true;
+	var obj = $(this), current_asset, parent = true, sub_root, attr_stat;
+	// Asset map mode
+	// 1 = Normal, 2 = Move, 3 = Clone, 4 = Link, 5 = selector
+	var map_mode = 1;
 	
 	// Find out what site we are at
 	var proto = location.protocol;
@@ -46,9 +44,6 @@ $.fn.matrixMap = function (options) {
 	// Create our element
 	obj.append('<ul id="map_root"></ul>');
 	
-	// Create a dummy var
-	var current_asset;
-	
 	// Get our children
 	get_children(host_url, xml_get, parent, current_asset);
 	
@@ -56,8 +51,8 @@ $.fn.matrixMap = function (options) {
 	$('#map_root li a').live('dblclick', function(){
 												  
 		// Get our current asset
-		var current_asset = $(this);
-		var sub_root = $(this).attr('id').replace('a', '');
+		current_asset = $(this);
+		sub_root = $(this).attr('id').replace('a', '');
 		
 		// Build our tree
 		parent = false;
@@ -67,18 +62,47 @@ $.fn.matrixMap = function (options) {
 		
 	});// End live dblclick
 	
+	// Bind when user double clicks on asset text
 	$('#map_root li a.asset_name').live('click', function(){
+			// Remove all colors first
+			$('#map_root li a').removeClass('live construction');
 			
 			// Set our color when clicked
-			var attr_stat = $(this).attr('status');
+			attr_stat = $(this).attr('status');
 			
 			if (attr_stat === '16') {
-				//$(this).addClass('live');
+				$(this).addClass('live');
 			} else if (attr_stat === '2') {
-				//$(this).addClass('construction');
+				$(this).addClass('construction');
 			}
 	
 	});// End live click
+	
+	// Bind when user clicks icon to invoke a map mode
+	$('a.icon_hold').live('click', function(){
+		// Selector
+		map_mode = 5;
+		
+		// We are now going to set the map mode
+		$('#map_root li').hover(
+			function () {
+				$(this).children('a').wrapAll($('<span class="asset_hold"></span>'));
+			}, 
+			function () {
+				var cnt = $('span.asset_hold', $(this)).contents();
+				$('span.asset_hold', $(this)).replaceWith(cnt);
+			}
+		);//end hover
+	
+	});
+	
+	// Remove selector if clicking escape
+	$(document).keyup(function(event){
+		if (event.keyCode == 27 && map_mode === 5) {
+			$('#map_root li').unbind('hover').die('hover');
+		}
+	});//end keyup
+	
 	
 };// End matrixMap
 
@@ -90,8 +114,6 @@ function expand(current_asset, sub_root) {
 	// Check to see if we already have a class
 	if (current_asset.hasClass('children')) {
 		current_asset.removeClass('children');
-		// Hide our tree
-		current_asset.parent().next('ul').hide();
 		
 	} else {
 		
@@ -108,6 +130,22 @@ function expand(current_asset, sub_root) {
 function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 	
 	if (!parent) {
+		// If we have already expanded the children we don't want to load the tree again
+		if (current_asset.parent().hasClass('cache')) {
+			if (current_asset.parent().hasClass('closed')) {
+				current_asset.parent().next('ul').show();
+				current_asset.parent().removeClass('closed');
+				return;
+			}
+			// Hide our tree
+			current_asset.parent().next('ul').hide();
+			current_asset.parent().addClass('closed');
+			return;
+		}
+		
+		// Don't expand if we have no kids
+		if (!current_asset.parent().hasClass('kids_closed')) return;
+			
 		// Create a new list
 		current_asset.parent().after('<ul></ul>');
 		
@@ -119,11 +157,6 @@ function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 		
 		// Check if we need to even get kids
 		expand(current_asset, sub_root);
-		
-		// If we have already expanded the children we don't want to load the tree again
-		if (current_asset.hasClass('cache')) {
-			//return;
-		}
 		
 	} else {
 		
@@ -181,7 +214,7 @@ function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 					} else {
 						var indicate_kids = '';
 					}
-					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" >' + asset_name + '</a>')
+					$('<li></li>').html('<a href="#" class="icon_hold">' + asset_image + '</a><a id="a' + asset_id + '" href="#" class="asset_name">' + asset_name + '</a>')
 						.appendTo(target)
 						.addClass(indicate_kids)
 						.children('a:last')
@@ -192,8 +225,7 @@ function get_children(host_url, xml_get, parent, current_asset, sub_root) {
 							type_code: asset_type_code,
 							num_kids: asset_num_kids,
 							name: asset_name
-							})
-						.addClass('asset_name');
+							});
 						
 				}// End if
 			
